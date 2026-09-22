@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 480" width="100%" height="100%" style="background:#090d16; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="macGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#1e293b" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="wifiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#0f291e" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="cfGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f97316" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#2b1b17" stop-opacity="0.8"/>
+    </linearGradient>
+    <linearGradient id="phoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#1e1b2e" stop-opacity="0.8"/>
+    </linearGradient>
+
+    <filter id="glowCyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glowGreen" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="glowOrange" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Title Banner -->
+  <text x="500" y="45" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="700" letter-spacing="0.5">⚡ QUICKSHARE ARCHITECTURE &amp; WORKFLOW</text>
+  <text x="500" y="70" text-anchor="middle" fill="#94a3b8" font-size="13">Bi-directional clipboard &amp; file transfer without installing apps on mobile</text>
+
+  <!-- Connection Lines (Behind Cards) -->
+  <!-- Host to LAN -->
+  <path d="M 290 190 L 370 190" stroke="#22c55e" stroke-width="2.5" stroke-dasharray="6,4" />
+  <!-- Host to Public Tunnel -->
+  <path d="M 290 330 L 370 330" stroke="#f97316" stroke-width="2.5" stroke-dasharray="6,4" />
+  
+  <!-- LAN to Mobile -->
+  <path d="M 630 190 L 710 190" stroke="#22c55e" stroke-width="2.5" stroke-dasharray="6,4" />
+  <!-- Public Tunnel to Mobile -->
+  <path d="M 630 330 L 710 330" stroke="#f97316" stroke-width="2.5" stroke-dasharray="6,4" />
+
+  <!-- ================= HOST CARD ================= -->
+  <rect x="40" y="110" width="250" height="300" rx="16" fill="url(#macGrad)" stroke="#38bdf8" stroke-width="1.5" />
+  <rect x="55" y="125" width="40" height="40" rx="10" fill="#0284c7" fill-opacity="0.2" />
+  <text x="75" y="151" text-anchor="middle" font-size="20">💻</text>
+  <text x="105" y="142" fill="#38bdf8" font-size="12" font-weight="700" letter-spacing="1">HOST MACHINE</text>
+  <text x="105" y="160" fill="#ffffff" font-size="16" font-weight="600">macOS / Windows</text>
+
+  <!-- Host Details Box -->
+  <rect x="55" y="180" width="220" height="60" rx="10" fill="#0f172a" fill-opacity="0.9" stroke="#334155" stroke-width="1" />
+  <text x="70" y="202" fill="#38bdf8" font-size="13" font-weight="600">QuickShare Server</text>
+  <text x="70" y="222" fill="#94a3b8" font-size="11">Port 5050 • Node.js Express</text>
+
+  <rect x="55" y="250" width="220" height="65" rx="10" fill="#0f172a" fill-opacity="0.9" stroke="#334155" stroke-width="1" />
+  <text x="70" y="272" fill="#f8fafc" font-size="12" font-weight="600">📋 System Clipboard</text>
+  <text x="70" y="292" fill="#94a3b8" font-size="11">Cmd+V / Ctrl+V auto-detect</text>
+  <text x="70" y="306" fill="#94a3b8" font-size="11">pbcopy/pbpaste &amp; PowerShell</text>
+
+  <rect x="55" y="325" width="220" height="65" rx="10" fill="#0f172a" fill-opacity="0.9" stroke="#334155" stroke-width="1" />
+  <text x="70" y="347" fill="#f8fafc" font-size="12" font-weight="600">📂 Downloads Storage</text>
+  <text x="70" y="367" fill="#94a3b8" font-size="11">~/Downloads/QuickShare</text>
+  <text x="70" y="381" fill="#38bdf8" font-size="11">1-Click Finder / Explorer</text>
+
+
+  <!-- ================= MIDDLE MODES ================= -->
+  <!-- Mode 1: Local Wi-Fi -->
+  <rect x="370" y="120" width="260" height="135" rx="16" fill="url(#wifiGrad)" stroke="#22c55e" stroke-width="1.5" />
+  <rect x="385" y="135" width="34" height="34" rx="8" fill="#16a34a" fill-opacity="0.2" />
+  <text x="402" y="158" text-anchor="middle" font-size="18">🏠</text>
+  <text x="430" y="150" fill="#22c55e" font-size="11" font-weight="700" letter-spacing="0.5">LOCAL NETWORK (LAN)</text>
+  <text x="430" y="167" fill="#ffffff" font-size="15" font-weight="600">Same Wi-Fi Router</text>
+
+  <text x="385" y="195" fill="#86efac" font-size="11" font-weight="600">⚡ Max P2P Wi-Fi Speeds</text>
+  <text x="385" y="213" fill="#cbd5e1" font-size="11">• 100% offline &amp; private transfer</text>
+  <text x="385" y="231" fill="#cbd5e1" font-size="11">• 0 MB cellular/internet data</text>
+
+  <!-- Mode 2: Cloudflare Public Tunnel -->
+  <rect x="370" y="275" width="260" height="135" rx="16" fill="url(#cfGrad)" stroke="#f97316" stroke-width="1.5" />
+  <rect x="385" y="290" width="34" height="34" rx="8" fill="#ea580c" fill-opacity="0.2" />
+  <text x="402" y="313" text-anchor="middle" font-size="18">🌐</text>
+  <text x="430" y="305" fill="#f97316" font-size="11" font-weight="700" letter-spacing="0.5">PUBLIC SHARING (WAN)</text>
+  <text x="430" y="322" fill="#ffffff" font-size="15" font-weight="600">Cloudflare HTTPS Tunnel</text>
+
+  <text x="385" y="350" fill="#fdba74" font-size="11" font-weight="600">🔒 4G / 5G / Remote Friends</text>
+  <text x="385" y="368" fill="#cbd5e1" font-size="11">• Encrypted HTTPS URL</text>
+  <text x="385" y="386" fill="#cbd5e1" font-size="11">• Protected by 4-digit PIN</text>
+
+
+  <!-- ================= MOBILE CLIENTS CARD ================= -->
+  <rect x="710" y="110" width="250" height="300" rx="16" fill="url(#phoneGrad)" stroke="#a855f7" stroke-width="1.5" />
+  <rect x="725" y="125" width="40" height="40" rx="10" fill="#9333ea" fill-opacity="0.2" />
+  <text x="745" y="151" text-anchor="middle" font-size="20">📱</text>
+  <text x="775" y="142" fill="#c084fc" font-size="12" font-weight="700" letter-spacing="1">MOBILE GUESTS</text>
+  <text x="775" y="160" fill="#ffffff" font-size="16" font-weight="600">iPhone &amp; Samsung</text>
+
+  <!-- Mobile Feature 1 -->
+  <rect x="725" y="180" width="220" height="60" rx="10" fill="#0f172a" fill-opacity="0.9" stroke="#334155" stroke-width="1" />
+  <text x="740" y="202" fill="#a855f7" font-size="13" font-weight="600">🚫 Zero App Installation</text>
+  <text x="740" y="222" fill="#94a3b8" font-size="11">Default Camera &amp; Safari/Chrome</text>
+
+  <!-- Mobile Feature 2 -->
+  <rect x="725" y="250" width="220" height="65" rx="10" fill="#0f172a" fill-opacity="0.9" stroke="#334155" stroke-width="1" />
+  <text x="740" y="272" fill="#f8fafc" font-size="12" font-weight="600">📸 Scan QR Code</text>
+  <text x="740" y="292" fill="#94a3b8" font-size="11">• Direct Download trigger</text>
+  <text x="740" y="306" fill="#94a3b8" font-size="11">• 1-Tap "Copy Text" on camera</text>
+
+  <!-- Mobile Feature 3 -->
+  <rect x="725" y="325" width="220" height="65" rx="10" fill="#0f172a" fill-opacity="0.9" stroke="#334155" stroke-width="1" />
+  <text x="740" y="347" fill="#f8fafc" font-size="12" font-weight="600">🖼️ Save to Camera Roll</text>
+  <text x="740" y="367" fill="#94a3b8" font-size="11">1-Tap "Album" (Web Share API)</text>
+  <text x="740" y="381" fill="#38bdf8" font-size="11">Saves to iOS Photos &amp; Gallery</text>
+
+  <!-- Bottom Footer Info -->
+  <text x="500" y="450" text-anchor="middle" fill="#64748b" font-size="12">Works seamlessly between macOS, Windows 10/11, iOS (iPhone/iPad), and Android (Samsung/Pixel/Xiaomi)</text>
+</svg>

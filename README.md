@@ -1,6 +1,42 @@
 # ⚡ QuickShare — Mac ↔ iPhone | Samsung (LAN & Public Transfer)
 
-> Seamless, bi-directional text (clipboard) and file/photo transfer between **macOS**, **iOS (iPhone)**, and **Android (Samsung)** with zero mobile app installation. Works over local Wi-Fi and global Internet via Cloudflare Tunnel.
+> Seamless, bi-directional text (clipboard) and file/photo transfer between **macOS**, **Windows**, **iOS (iPhone)**, and **Android (Samsung)** with zero mobile app installation. Works over local Wi-Fi and global Internet via Cloudflare Tunnel.
+
+<p align="center">
+  <img src="assets/how-it-works.svg" alt="QuickShare Architecture & Workflow" width="100%">
+</p>
+
+---
+
+## 🗺️ How It Works
+
+```mermaid
+flowchart LR
+    subgraph Host["💻 Host Computer (macOS / Windows)"]
+        direction TB
+        Server["⚡ QuickShare Server (Port 5050)"]
+        Clip["📋 System Clipboard (Cmd+V / Ctrl+V)"]
+        Dir["📂 ~/Downloads/QuickShare"]
+        Server <--> Clip
+        Server <--> Dir
+    end
+
+    subgraph Networks["📡 Transfer Channels"]
+        direction TB
+        LAN["🏠 Local Wi-Fi (LAN)<br/>• Ultra-fast local transfer<br/>• 100% offline & zero internet quota"]
+        WAN["🌐 Public Internet Share<br/>• Cloudflare HTTPS Tunnel<br/>• Protected with 4-Digit PIN"]
+    end
+
+    subgraph Mobile["📱 Mobile Devices (Zero App Install)"]
+        direction TB
+        Phone["🍏 iPhone | 🤖 Samsung<br/>• Scan QR with Camera<br/>• Direct Download Trigger<br/>• 1-Tap Save to Photos / Gallery"]
+    end
+
+    Host <===> LAN
+    Host <===> WAN
+    LAN <===> Mobile
+    WAN <===> Mobile
+```
 
 ---
 
