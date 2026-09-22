@@ -526,6 +526,9 @@
       </div>
 
       <div style="display: flex; gap: 8px; align-items: center;">
+        <button id="btn-toggle-public" class="btn btn-secondary btn-sm mac-only" style="border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;" title="Chia sẻ ra ngoài Internet qua Cloudflare Tunnel">
+          🌐 Public Share: <span id="public-status-text">TẮT</span>
+        </button>
         <button id="btn-show-app-qr" class="btn btn-secondary btn-sm mac-only" title="Mở mã QR kết nối điện thoại">
           📱 Kết nối ĐT
         </button>
@@ -749,6 +752,72 @@
     </div>
   </div>
 
+  <!-- Modal: Public Tunnel Controller (MAC ONLY) -->
+  <div id="public-tunnel-modal" class="modal-overlay mac-only">
+    <div class="modal-card" style="max-width: 400px;">
+      <div style="font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>🌐</span>
+        <span>Public Share (Chia sẻ ngoài mạng)</span>
+      </div>
+
+      <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+        Cho phép người dùng ở mạng khác (4G, Wi-Fi khác, nơi khác) truy cập tải ảnh, tệp tin và copy text từ máy Mac của bạn.
+      </p>
+
+      <div id="tunnel-loading" class="hidden" style="padding: 20px; text-align: center; color: #60a5fa; font-size: 13px;">
+        ⏳ Đang khởi tạo Cloudflare Tunnel bảo mật...
+      </div>
+
+      <div id="tunnel-active-box" class="hidden" style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+        <div class="qr-container" id="public-qrcode" style="margin: 0 auto;"></div>
+
+        <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid var(--input-border); border-radius: 12px; padding: 10px; text-align: left;">
+          <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">🔗 Link công khai (Kèm mã PIN):</div>
+          <div id="public-share-link" style="font-size: 12px; font-family: monospace; color: #34d399; word-break: break-all; select-all;">...</div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 8px 12px;">
+          <span style="font-size: 12px; color: #93c5fd;">🔑 Mã PIN bảo mật:</span>
+          <span id="public-pin-badge" style="font-size: 16px; font-weight: 700; letter-spacing: 2px; color: #60a5fa;">----</span>
+        </div>
+
+        <button id="btn-copy-public-link" class="btn btn-primary" style="width: 100%;">
+          📋 Sao chép Link chia sẻ
+        </button>
+
+        <button id="btn-stop-tunnel" class="btn btn-secondary" style="width: 100%; color: #f87171;">
+          🛑 Tắt Public Share
+        </button>
+      </div>
+
+      <div id="tunnel-inactive-box" style="width: 100%; display: flex; flex-direction: column; gap: 10px;">
+        <button id="btn-start-tunnel" class="btn btn-primary" style="width: 100%; background: #2563eb;">
+          🚀 Bật Public Share ngay
+        </button>
+        <button id="btn-close-tunnel-modal" class="btn btn-secondary" style="width: 100%;">
+          Đóng
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: PIN Prompt for Public Visitors -->
+  <div id="pin-prompt-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 340px;">
+      <div style="font-size: 32px;">🔒</div>
+      <div style="font-weight: 700; font-size: 16px;">Yêu cầu Mã PIN</div>
+      <p style="font-size: 12px; color: var(--text-muted);">
+        Trang chia sẻ từ xa này được bảo vệ. Vui lòng nhập mã PIN 4 số do chủ máy cung cấp:
+      </p>
+
+      <input type="text" id="visitor-pin-input" maxlength="4" placeholder="••••" style="font-size: 24px; text-align: center; letter-spacing: 6px; font-weight: 700; width: 140px; padding: 8px; border-radius: 12px; background: var(--input-bg); border: 1px solid var(--input-border); color: #fff; outline: none;">
+
+      <button id="btn-submit-pin" class="btn btn-primary" style="width: 100%;">
+        Mở khóa dữ liệu
+      </button>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div id="toast">
     <span id="toast-icon">✅</span>
@@ -880,7 +949,7 @@
     // System Info
     async function loadInfo() {
       try {
-        const res = await fetch('/api/info');
+        const res = await apiFetch('/api/info');
         const data = await res.json();
         if (isMobile) {
           macIpLabel.innerText = `Kết nối với Mac: ${data.local_ip}`;
@@ -922,7 +991,7 @@
       showToast('Đang tải file và sinh mã QR...', '⏳');
 
       try {
-        const res = await fetch('/api/quick-qr-file', {
+        const res = await apiFetch('/api/quick-qr-file', {
           method: 'POST',
           body: formData,
         });
@@ -1054,7 +1123,7 @@
       }
       btnSendText.disabled = true;
       try {
-        const res = await fetch('/api/clipboard', {
+        const res = await apiFetch('/api/clipboard', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ text }),
@@ -1089,7 +1158,7 @@
 
     async function loadClipboard() {
       try {
-        const res = await fetch('/api/clipboard');
+        const res = await apiFetch('/api/clipboard');
         const data = await res.json();
         currentMacClipboard = data.text || '';
         if (currentMacClipboard) {
@@ -1143,7 +1212,7 @@
         pendingFiles.forEach(f => formData.append('files', f));
 
         try {
-          const res = await fetch('/api/upload', {
+          const res = await apiFetch('/api/upload', {
             method: 'POST',
             body: formData,
           });
@@ -1170,7 +1239,7 @@
     // --- TAB: FILES LIST ---
     async function loadFiles() {
       try {
-        const res = await fetch('/api/files');
+        const res = await apiFetch('/api/files');
         const data = await res.json();
         if (!data.files || data.files.length === 0) {
           const emptyText = isMobile ? 'Chưa có tệp nào từ Mac gửi sang.' : 'Chưa có tệp nào trong thư mục QuickShare.';
@@ -1237,7 +1306,7 @@
     window.deleteFile = async function(filename) {
       if (!confirm(`Bạn có chắc muốn xoá file "${filename}" không?`)) return;
       try {
-        const res = await fetch(`/api/files/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+        const res = await apiFetch(`/api/files/${encodeURIComponent(filename)}`, { method: 'DELETE' });
         if (res.ok) {
           showToast('Đã xoá file', '🗑️');
           loadFiles();
@@ -1250,7 +1319,7 @@
     if (btnOpenFolder) {
       btnOpenFolder.addEventListener('click', async () => {
         try {
-          await fetch('/api/open-folder', { method: 'POST' });
+          await apiFetch('/api/open-folder', { method: 'POST' });
           showToast('Đã mở thư mục Downloads trong Finder!', '📂');
         } catch (err) {
           showToast('Không thể mở thư mục', '❌');
@@ -1316,7 +1385,7 @@
       showToast('Đang xử lý ảnh để lưu vào máy...', '⏳');
 
       try {
-        const res = await fetch(`/api/download/${encodeURIComponent(filename)}`);
+        const res = await apiFetch(`/api/download/${encodeURIComponent(filename)}`);
         const blob = await res.blob();
         const file = new File([blob], filename, { type: blob.type || 'image/png' });
 
@@ -1344,8 +1413,207 @@
       }
     };
 
+
+    // --- PUBLIC SHARE & PIN MANAGEMENT ---
+    let currentPin = new URLSearchParams(window.location.search).get('pin') || sessionStorage.getItem('quickshare_pin') || '';
+    if (currentPin) {
+      sessionStorage.setItem('quickshare_pin', currentPin);
+    }
+
+    function apiFetch(url, options = {}) {
+      options.headers = options.headers || {};
+      if (currentPin) {
+        options.headers['x-public-pin'] = currentPin;
+        const sep = url.includes('?') ? '&' : '?';
+        url = `${url}${sep}pin=${encodeURIComponent(currentPin)}`;
+      }
+      return fetch(url, options).then(async (res) => {
+        if (res.status === 401) {
+          const data = await res.clone().json().catch(() => ({}));
+          if (data.require_pin) {
+            const modal = document.getElementById('pin-prompt-modal');
+            if (modal) modal.classList.add('active');
+          }
+        }
+        return res;
+      });
+    }
+
+    // Modal elements
+    const btnTogglePublic = document.getElementById('btn-toggle-public');
+    const publicTunnelModal = document.getElementById('public-tunnel-modal');
+    const btnCloseTunnelModal = document.getElementById('btn-close-tunnel-modal');
+    const btnStartTunnel = document.getElementById('btn-start-tunnel');
+    const btnStopTunnel = document.getElementById('btn-stop-tunnel');
+    const btnCopyPublicLink = document.getElementById('btn-copy-public-link');
+    const tunnelLoading = document.getElementById('tunnel-loading');
+    const tunnelActiveBox = document.getElementById('tunnel-active-box');
+    const tunnelInactiveBox = document.getElementById('tunnel-inactive-box');
+    const publicShareLink = document.getElementById('public-share-link');
+    const publicPinBadge = document.getElementById('public-pin-badge');
+    const publicQrcode = document.getElementById('public-qrcode');
+    const publicStatusText = document.getElementById('public-status-text');
+
+    // PIN prompt elements
+    const pinPromptModal = document.getElementById('pin-prompt-modal');
+    const visitorPinInput = document.getElementById('visitor-pin-input');
+    const btnSubmitPin = document.getElementById('btn-submit-pin');
+
+    if (btnTogglePublic) {
+      btnTogglePublic.addEventListener('click', () => {
+        checkTunnelStatus();
+        publicTunnelModal.classList.add('active');
+      });
+    }
+
+    if (btnCloseTunnelModal) {
+      btnCloseTunnelModal.addEventListener('click', () => {
+        publicTunnelModal.classList.remove('active');
+      });
+    }
+
+    if (publicTunnelModal) {
+      publicTunnelModal.addEventListener('click', (e) => {
+        if (e.target === publicTunnelModal) publicTunnelModal.classList.remove('active');
+      });
+    }
+
+    async function checkTunnelStatus() {
+      try {
+        const res = await fetch('/api/tunnel/status');
+        const data = await res.json();
+        if (data.active) {
+          showTunnelActive(data.share_link, data.pin);
+          if (publicStatusText) {
+            publicStatusText.innerText = 'BẬT';
+            publicStatusText.style.color = '#34d399';
+          }
+        } else {
+          showTunnelInactive();
+          if (publicStatusText) {
+            publicStatusText.innerText = 'TẮT';
+            publicStatusText.style.color = '#94a3b8';
+          }
+        }
+      } catch (err) {}
+    }
+
+    function showTunnelActive(link, pin) {
+      if (!tunnelActiveBox) return;
+      tunnelLoading.classList.add('hidden');
+      tunnelInactiveBox.classList.add('hidden');
+      tunnelActiveBox.classList.remove('hidden');
+      publicShareLink.innerText = link;
+      publicPinBadge.innerText = pin;
+
+      publicQrcode.innerHTML = '';
+      new QRCode(publicQrcode, {
+        text: link,
+        width: 170,
+        height: 170,
+        colorDark: '#0f172a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+
+    function showTunnelInactive() {
+      if (!tunnelInactiveBox) return;
+      tunnelLoading.classList.add('hidden');
+      tunnelActiveBox.classList.add('hidden');
+      tunnelInactiveBox.classList.remove('hidden');
+    }
+
+    if (btnStartTunnel) {
+      btnStartTunnel.addEventListener('click', async () => {
+        tunnelInactiveBox.classList.add('hidden');
+        tunnelLoading.classList.remove('hidden');
+        try {
+          const res = await fetch('/api/tunnel/start', { method: 'POST' });
+          const data = await res.json();
+          if (data.status === 'ok') {
+            showTunnelActive(data.share_link, data.pin);
+            if (publicStatusText) {
+              publicStatusText.innerText = 'BẬT';
+              publicStatusText.style.color = '#34d399';
+            }
+            showToast('Đã tạo Public Share Link thành công!', '🌐');
+          } else {
+            showToast(data.error || 'Không thể tạo tunnel', '❌');
+            showTunnelInactive();
+          }
+        } catch (err) {
+          showToast('Lỗi khởi tạo Cloudflare Tunnel', '❌');
+          showTunnelInactive();
+        }
+      });
+    }
+
+    if (btnStopTunnel) {
+      btnStopTunnel.addEventListener('click', async () => {
+        try {
+          await fetch('/api/tunnel/stop', { method: 'POST' });
+          showTunnelInactive();
+          if (publicStatusText) {
+            publicStatusText.innerText = 'TẮT';
+            publicStatusText.style.color = '#94a3b8';
+          }
+          showToast('Đã tắt Public Share an toàn!', '🛑');
+        } catch (err) {
+          showToast('Không thể dừng tunnel', '❌');
+        }
+      });
+    }
+
+    if (btnCopyPublicLink) {
+      btnCopyPublicLink.addEventListener('click', () => {
+        const link = publicShareLink.innerText;
+        navigator.clipboard.writeText(link);
+        showToast('Đã copy link kèm mã PIN!', '📋');
+      });
+    }
+
+    // Submit PIN for Public Visitors
+    if (btnSubmitPin && visitorPinInput) {
+      btnSubmitPin.addEventListener('click', async () => {
+        const pin = visitorPinInput.value.trim();
+        if (pin.length !== 4) {
+          showToast('Mã PIN gồm 4 số!', '⚠️');
+          return;
+        }
+        btnSubmitPin.disabled = true;
+        try {
+          const res = await fetch('/api/tunnel/verify-pin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin })
+          });
+          if (res.ok) {
+            currentPin = pin;
+            sessionStorage.setItem('quickshare_pin', pin);
+            pinPromptModal.classList.remove('active');
+            showToast('Mở khóa thành công!', '🎉');
+            loadInfo();
+            loadClipboard();
+            loadFiles();
+          } else {
+            showToast('Mã PIN không chính xác!', '❌');
+          }
+        } catch (err) {
+          showToast('Lỗi kiểm tra mã PIN', '❌');
+        } finally {
+          btnSubmitPin.disabled = false;
+        }
+      });
+
+      visitorPinInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') btnSubmitPin.click();
+      });
+    }
+
     // Start
     loadInfo();
+    checkTunnelStatus();
     loadClipboard();
     setInterval(loadClipboard, 5000);
   </script>
