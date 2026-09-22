@@ -19,6 +19,14 @@
 
 ---
 
+## 📖 Runbooks & Guides
+
+Detailed step-by-step setup guides, autostart on boot, firewall configuration, and troubleshooting are available:
+- 🍏 [**macOS Runbook (RUNBOOK_MACOS.md)**](file:///Users/admin/.gemini/antigravity-ide/scratch/local-quick-share/RUNBOOK_MACOS.md) — Homebrew, `launchd` autostart, macOS CLI, pbcopy/pbpaste.
+- 🪟 [**Windows Runbook (RUNBOOK_WINDOWS.md)**](file:///Users/admin/.gemini/antigravity-ide/scratch/local-quick-share/RUNBOOK_WINDOWS.md) — `winget`, `start.bat`, `quickshare.ps1`, Windows Firewall rules, Windows Startup setup.
+
+---
+
 ## 🚀 Getting Started
 
 ### 1. Prerequisites

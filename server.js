@@ -9,7 +9,23 @@ const { execSync, spawn } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 5050;
-const CLOUDFLARED_BIN = '/Users/admin/homebrew/bin/cloudflared';
+
+// Helper: Resolve cloudflared executable path across macOS and Windows
+function getCloudflaredBin() {
+  if (process.platform === 'win32') {
+    return 'cloudflared.exe';
+  }
+  if (fs.existsSync('/Users/admin/homebrew/bin/cloudflared')) {
+    return '/Users/admin/homebrew/bin/cloudflared';
+  }
+  if (fs.existsSync('/opt/homebrew/bin/cloudflared')) {
+    return '/opt/homebrew/bin/cloudflared';
+  }
+  if (fs.existsSync('/usr/local/bin/cloudflared')) {
+    return '/usr/local/bin/cloudflared';
+  }
+  return 'cloudflared';
+}
 
 // Setup directories
 const DOWNLOADS_DIR = path.join(os.homedir(), 'Downloads', 'QuickShare');
@@ -28,10 +44,14 @@ let publicPin = null;
 // Helper: Get active Wi-Fi IPv4 address
 function getLocalIp() {
   const interfaces = os.networkInterfaces();
-  if (interfaces['en0']) {
-    for (const iface of interfaces['en0']) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        return iface.address;
+  // Check common Wi-Fi interface names (en0 for macOS, Wi-Fi / WLAN for Windows)
+  const preferredNames = ['en0', 'Wi-Fi', 'WLAN', 'Ethernet'];
+  for (const name of preferredNames) {
+    if (interfaces[name]) {
+      for (const iface of interfaces[name]) {
+        if (iface.family === 'IPv4' && !iface.internal) {
+          return iface.address;
+        }
       }
     }
   }
@@ -45,42 +65,58 @@ function getLocalIp() {
   return '127.0.0.1';
 }
 
-// Helper: Read macOS clipboard
-function getMacClipboard() {
-  if (process.platform === 'darwin') {
-    try {
+// Helper: Read OS clipboard (macOS & Windows)
+function getSystemClipboard() {
+  try {
+    if (process.platform === 'darwin') {
       return execSync('pbpaste', { encoding: 'utf-8', timeout: 2000 });
-    } catch (err) {
-      return '';
+    } else if (process.platform === 'win32') {
+      return execSync('powershell.exe -NoProfile -Command "Get-Clipboard"', { encoding: 'utf-8', timeout: 2500 });
     }
+  } catch (err) {
+    return '';
   }
   return '';
 }
 
-// Helper: Write to macOS clipboard
-function setMacClipboard(text) {
-  if (process.platform === 'darwin') {
-    try {
+// Helper: Write to OS clipboard (macOS & Windows)
+function setSystemClipboard(text) {
+  try {
+    if (process.platform === 'darwin') {
       const proc = spawn('pbcopy');
       proc.stdin.write(text, 'utf-8');
       proc.stdin.end();
       return true;
-    } catch (err) {
-      return false;
+    } else if (process.platform === 'win32') {
+      const proc = spawn('powershell.exe', ['-NoProfile', '-Command', '$input | Set-Clipboard']);
+      proc.stdin.write(text, 'utf-8');
+      proc.stdin.end();
+      return true;
     }
+  } catch (err) {
+    return false;
   }
   return false;
 }
 
-// Helper: macOS system notification
-function notifyMac(title, message) {
-  if (process.platform === 'darwin') {
-    try {
-      const safeTitle = (title || 'Quick Share').replace(/"/g, '\\"');
-      const safeMsg = (message || '').replace(/"/g, '\\"');
+// Helper: OS system notification (macOS & Windows)
+function notifyOS(title, message) {
+  try {
+    const safeTitle = (title || 'Quick Share').replace(/"/g, '\\"');
+    const safeMsg = (message || '').replace(/"/g, '\\"');
+    if (process.platform === 'darwin') {
       spawn('osascript', ['-e', `display notification "${safeMsg}" with title "${safeTitle}" sound name "Glass"`]);
-    } catch (err) {}
-  }
+    } else if (process.platform === 'win32') {
+      const psScript = `
+        [reflection.assembly]::loadwithpartialname('System.Windows.Forms') | Out-Null;
+        $notify = new-object system.windows.forms.notifyicon;
+        $notify.icon = [system.drawing.systemicons]::information;
+        $notify.visible = $true;
+        $notify.showballoontip(3000, '${safeTitle}', '${safeMsg}', [system.windows.forms.tooltipicon]::Info);
+      `;
+      spawn('powershell.exe', ['-NoProfile', '-WindowStyle', 'Hidden', '-Command', psScript]);
+    }
+  } catch (err) {}
 }
 
 // Helper: Check if request is from Public Internet (via Cloudflare Tunnel)
@@ -100,7 +136,8 @@ function startCloudflareTunnel() {
 
   return new Promise((resolve, reject) => {
     try {
-      tunnelProcess = spawn(CLOUDFLARED_BIN, ['tunnel', '--url', `http://localhost:${PORT}`]);
+      const bin = getCloudflaredBin();
+      tunnelProcess = spawn(bin, ['tunnel', '--url', `http://localhost:${PORT}`]);
     } catch (err) {
       return reject(err);
     }
@@ -125,7 +162,7 @@ function startCloudflareTunnel() {
         console.log('======================================================');
         console.log(`🔗 Public Link: \x1b[36m${publicUrl}?pin=${publicPin}\x1b[0m`);
         console.log(`🔑 PIN Code:    \x1b[33m${publicPin}\x1b[0m\n`);
-        notifyMac('Quick Share Public', `Public Link Active: ${publicUrl} (PIN: ${publicPin})`);
+        notifyOS('Quick Share Public', `Public Link Active: ${publicUrl} (PIN: ${publicPin})`);
         resolve({ public_url: publicUrl, pin: publicPin });
       }
     };
@@ -148,7 +185,7 @@ function stopCloudflareTunnel() {
     publicUrl = null;
     publicPin = null;
     console.log('\n🛑 Public Cloudflare Tunnel stopped.\n');
-    notifyMac('Quick Share', 'Public Tunnel Closed');
+    notifyOS('Quick Share', 'Public Tunnel Closed');
     return true;
   }
   return false;
@@ -232,7 +269,7 @@ app.post('/api/tunnel/verify-pin', (req, res) => {
   }
 });
 
-// API: Start Public Tunnel (Mac Only)
+// API: Start Public Tunnel
 app.post('/api/tunnel/start', async (req, res) => {
   try {
     const result = await startCloudflareTunnel();
@@ -251,7 +288,7 @@ app.post('/api/tunnel/start', async (req, res) => {
   }
 });
 
-// API: Stop Public Tunnel (Mac Only)
+// API: Stop Public Tunnel
 app.post('/api/tunnel/stop', (req, res) => {
   stopCloudflareTunnel();
   res.json({ status: 'ok' });
@@ -267,19 +304,19 @@ app.get('/api/tunnel/status', (req, res) => {
   });
 });
 
-// API: Read Mac Clipboard
+// API: Read System Clipboard
 app.get('/api/clipboard', (req, res) => {
-  const text = getMacClipboard();
+  const text = getSystemClipboard();
   res.json({ text });
 });
 
-// API: Set Mac Clipboard
+// API: Set System Clipboard
 app.post('/api/clipboard', (req, res) => {
   const text = req.body.text || '';
   if (!text) {
     return res.status(400).json({ error: 'Text content is empty' });
   }
-  setMacClipboard(text);
+  setSystemClipboard(text);
   
   textHistory.unshift({
     id: Date.now().toString(),
@@ -290,7 +327,7 @@ app.post('/api/clipboard', (req, res) => {
 
   const preview = text.length > 40 ? text.slice(0, 40) + '...' : text;
   const source = isPublicRequest(req) ? 'Internet' : 'Local Wi-Fi';
-  notifyMac('Quick Share', `[${source}] Received text: "${preview}"`);
+  notifyOS('Quick Share', `[${source}] Received text: "${preview}"`);
   res.json({ status: 'ok', length: text.length });
 });
 
@@ -307,7 +344,7 @@ app.post('/api/upload', upload.array('files'), (req, res) => {
   const fileNames = req.files.map((f) => f.filename);
   const source = isPublicRequest(req) ? 'Internet' : 'Local Wi-Fi';
   const msg = req.files.length === 1 ? `[${source}] Received: ${fileNames[0]}` : `[${source}] Received ${req.files.length} files`;
-  notifyMac('Quick Share', msg);
+  notifyOS('Quick Share', msg);
   res.json({ status: 'ok', files: fileNames });
 });
 
@@ -396,13 +433,16 @@ app.delete('/api/files/:filename', (req, res) => {
   }
 });
 
-// API: Open Downloads folder in macOS Finder (Local Only)
+// API: Open Downloads folder in macOS Finder or Windows Explorer (Local Only)
 app.post('/api/open-folder', (req, res) => {
   if (process.platform === 'darwin') {
     spawn('open', [DOWNLOADS_DIR]);
     res.json({ status: 'ok' });
+  } else if (process.platform === 'win32') {
+    spawn('explorer.exe', [DOWNLOADS_DIR]);
+    res.json({ status: 'ok' });
   } else {
-    res.status(400).json({ error: 'macOS only' });
+    res.status(400).json({ error: 'Unsupported operating system for folder opening' });
   }
 });
 
@@ -415,7 +455,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 QUICKSHARE RUNNING ON LOCAL NETWORK');
   console.log('======================================================');
   console.log(`📡 Local URL:      \x1b[36m${url}\x1b[0m`);
-  console.log(`💻 Open on Mac:    \x1b[32mhttp://localhost:${PORT}\x1b[0m`);
+  console.log(`💻 Open on Host:   \x1b[32mhttp://localhost:${PORT}\x1b[0m`);
   console.log(`📂 Downloads Dir:  \x1b[33m${DOWNLOADS_DIR}\x1b[0m\n`);
   console.log('📱 Scan QR code below with iPhone or Samsung Camera:');
   console.log('------------------------------------------------------');
