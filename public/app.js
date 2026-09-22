@@ -5,14 +5,45 @@
     if (isMobile) {
       document.body.classList.remove('is-mac');
       document.body.classList.add('is-phone');
-      document.getElementById('app-title').innerText = '📱 Quick Share (Phone)';
-      document.getElementById('tab-files-title').innerText = 'Tệp từ Mac';
     } else {
       document.body.classList.remove('is-phone');
       document.body.classList.add('is-mac');
-      document.getElementById('app-title').innerText = '💻 Quick Share (Mac)';
-      document.getElementById('tab-files-title').innerText = 'Tệp QuickShare';
     }
+
+    function updateTitles() {
+      const appTitle = document.getElementById('app-title');
+      const tabFilesTitle = document.getElementById('tab-files-title');
+      if (typeof t !== 'function') return;
+      if (isMobile) {
+        if (appTitle) appTitle.innerText = `📱 ${t('brand.title')} (${t('tab.files_from_mac')})`;
+        if (tabFilesTitle) tabFilesTitle.innerText = t('tab.files_from_mac');
+      } else {
+        if (appTitle) appTitle.innerText = `💻 ${t('brand.title')}`;
+        if (tabFilesTitle) tabFilesTitle.innerText = t('tab.shared_files');
+      }
+    }
+
+    // Language Toggle Setup
+    const btnToggleLang = document.getElementById('btn-toggle-lang');
+    if (btnToggleLang) {
+      btnToggleLang.addEventListener('click', () => {
+        if (window.toggleLanguage) {
+          window.toggleLanguage();
+          updateTitles();
+          loadFiles();
+        }
+      });
+    }
+
+    window.addEventListener('languageChanged', () => {
+      updateTitles();
+      loadFiles();
+    });
+
+    if (window.updateDomTranslations) {
+      window.updateDomTranslations();
+    }
+    updateTitles();
 
     // Elements
     const toast = document.getElementById('toast');
@@ -415,12 +446,11 @@
         const res = await apiFetch('/api/files');
         const data = await res.json();
         if (!data.files || data.files.length === 0) {
-          const emptyText = isMobile ? 'Chưa có tệp nào từ Mac gửi sang.' : 'Chưa có tệp nào trong thư mục QuickShare.';
-          filesList.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 24px;">${emptyText}</div>`;
+          filesList.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 24px;">${typeof t === 'function' ? t('files.empty') : 'Chưa có file nào'}</div>`;
           return;
         }
 
-        filesList.innerHTML = data.files.map(f => `
+        filesList.innerHTML = data.files.map((f) => `
           <div class="file-item">
             <div class="file-info">
               <div class="file-icon">${f.is_image ? '🖼️' : '📄'}</div>
@@ -432,23 +462,23 @@
             <div class="file-actions">
               ${f.is_image ? `
                 <button onclick="saveToGallery('${encodeURIComponent(f.name)}')" class="btn btn-sm phone-only" style="background: #2563eb; color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.3);" title="Lưu vào Cuộn ảnh / Gallery">
-                  🖼️ Album
+                  ${typeof t === 'function' ? t('files.btn_album') : '🖼️ Album'}
                 </button>
               ` : ''}
               <button onclick="showFileQr('${encodeURIComponent(f.name)}', '${f.direct_url}')" class="btn btn-secondary btn-sm mac-only" title="Hiện mã QR để điện thoại quét tải thẳng">
                 📱 QR
               </button>
               <a href="/api/download/${encodeURIComponent(f.name)}" download="${f.name}" class="btn btn-primary btn-sm" style="text-decoration: none;">
-                📥 Tải
+                ${typeof t === 'function' ? t('files.btn_download') : '⬇️ Tải'}
               </a>
               <button onclick="deleteFile('${f.name}')" class="btn btn-secondary btn-sm mac-only" style="color: #f87171;">
-                🗑️
+                ${typeof t === 'function' ? t('files.btn_delete') : '🗑️'}
               </button>
             </div>
           </div>
         `).join('');
       } catch (err) {
-        filesList.innerHTML = '<div style="text-align: center; color: #f87171; font-size: 13px; padding: 24px;">Không thể tải danh sách file.</div>';
+        filesList.innerHTML = `<div style="text-align: center; color: #f87171; font-size: 13px; padding: 24px;">${typeof t === 'function' ? t('files.loading') : 'Không thể tải danh sách file.'}</div>`;
       }
     }
     btnRefreshFiles.addEventListener('click', loadFiles);
