@@ -1,6 +1,6 @@
 {
-  "name": "quickshare-cli",
-  "version": "1.0.0",
+  "name": "@ngocbaongo/quickshare",
+  "version": "1.0.1",
   "description": "Bi-directional clipboard and file transfer between macOS, Windows, iOS, and Android over local Wi-Fi and Cloudflare Tunnel.",
   "main": "server.js",
   "bin": {
