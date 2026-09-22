@@ -48,6 +48,35 @@
       return fallback;
     };
 
+    const ERROR_I18N_MAP = {
+      'Text content is empty': 'error.text_empty',
+      'No files provided': 'error.no_files',
+      'No file selected': 'error.no_files',
+      'Cannot read downloads directory': 'error.cannot_read_dir',
+      'File not found': 'error.file_not_found',
+      'Access restricted for public visitors': 'error.public_restricted',
+      'Action not allowed on public connection': 'error.public_restricted',
+      'Feature disabled on public connection': 'error.public_restricted',
+      'Changing storage path is forbidden for public visitors': 'error.storage_forbidden',
+      'Directory path is required': 'toast.folder_enter_path',
+      'Invalid PIN code': 'toast.pin_incorrect',
+      'Failed to start tunnel': 'toast.tunnel_create_err',
+      'Tunnel initialization timed out': 'toast.tunnel_create_err',
+    };
+
+    function formatErrorMessage(errOrMsg, fallbackKey, fallbackDefault) {
+      const raw = typeof errOrMsg === 'string' ? errOrMsg : (errOrMsg && errOrMsg.message) ? errOrMsg.message : '';
+      if (raw && ERROR_I18N_MAP[raw]) {
+        return tr(ERROR_I18N_MAP[raw], raw);
+      }
+      if (raw && raw.startsWith('Cannot use directory:')) {
+        const detail = raw.replace('Cannot use directory:', '').trim();
+        return tr('error.cannot_use_dir', raw, { error: detail });
+      }
+      if (raw) return raw;
+      return tr(fallbackKey, fallbackDefault);
+    }
+
     window.addEventListener('languageChanged', () => {
       updateTitles();
       loadFiles();
@@ -240,7 +269,7 @@
           showToast(tr('toast.qr_created', 'Đã tạo mã QR tải trực tiếp!'), '🎯');
           loadFiles();
         } else {
-          showToast(data.error || tr('toast.upload_error', 'Lỗi tải file'), '❌');
+          showToast(formatErrorMessage(data.error, 'toast.upload_error', 'Lỗi tải file'), '❌');
         }
       } catch (err) {
         showToast(tr('toast.qr_upload_err', 'Lỗi khi tải file lên Mac'), '❌');
@@ -361,7 +390,7 @@
           textInput.value = '';
           loadClipboard();
         } else {
-          showToast(data.error || 'Lỗi gửi text', '❌');
+          showToast(formatErrorMessage(data.error, 'toast.text_send_err_detail', 'Lỗi gửi văn bản'), '❌');
         }
       } catch (err) {
         showToast(tr('toast.text_send_err', 'Không thể kết nối với Mac'), '❌');
@@ -452,7 +481,7 @@
             if (galleryInput) galleryInput.value = '';
             loadFiles();
           } else {
-            showToast(data.error || tr('toast.upload_error', 'Lỗi gửi file'), '❌');
+            showToast(formatErrorMessage(data.error, 'toast.upload_error', 'Lỗi gửi file'), '❌');
           }
         } catch (err) {
           showToast(tr('toast.upload_error', 'Lỗi kết nối khi gửi file'), '❌');
@@ -643,7 +672,7 @@
           loadFiles();
         } else {
           const data = await res.json();
-          showToast(data.error || tr('toast.upload_error', 'Lỗi tải file'), '❌');
+          showToast(formatErrorMessage(data.error, 'toast.upload_error', 'Lỗi tải file'), '❌');
         }
       } catch (err) {
         showToast(tr('toast.upload_error', 'Lỗi kết nối khi tải file'), '❌');
@@ -770,14 +799,14 @@
             if (footerStoragePath) footerStoragePath.innerText = res.current_dir;
             showToast(tr('toast.folder_changed', `Đã đổi thư mục lưu sang: ${res.current_dir}`, { dir: res.current_dir }), '📂');
             if (storageModal) storageModal.style.display = 'none';
-            fetchFiles();
+            loadFiles();
           }
         } catch (err) {
           if (storageStatusMsg) {
             storageStatusMsg.style.display = 'block';
             storageStatusMsg.style.background = 'rgba(239, 68, 68, 0.15)';
             storageStatusMsg.style.color = '#ef4444';
-            storageStatusMsg.innerText = err.message || 'Lỗi khi đổi thư mục';
+            storageStatusMsg.innerText = formatErrorMessage(err, 'toast.folder_change_err', 'Lỗi khi đổi thư mục');
           }
         } finally {
           btnSaveStorage.disabled = false;
@@ -868,7 +897,7 @@
         }
       } catch (err) {
         if (err.name !== 'AbortError') {
-          showToast('Lỗi khi lưu ảnh: ' + err.message, '❌');
+          showToast(tr('toast.photo_save_err', 'Lỗi khi lưu ảnh: ' + err.message, { error: err.message }), '❌');
         }
       }
     };
@@ -999,11 +1028,11 @@
             }
             showToast(tr('toast.public_started', 'Đã tạo Public Share Link thành công!'), '🌐');
           } else {
-            showToast(data.error || 'Không thể tạo tunnel', '❌');
+            showToast(formatErrorMessage(data.error, 'toast.tunnel_create_err', 'Không thể tạo tunnel'), '❌');
             showTunnelInactive();
           }
         } catch (err) {
-          showToast('Lỗi khởi tạo Cloudflare Tunnel', '❌');
+          showToast(tr('toast.tunnel_init_err', 'Lỗi khởi tạo Cloudflare Tunnel'), '❌');
           showTunnelInactive();
         }
       });
@@ -1020,7 +1049,7 @@
           }
           showToast(tr('toast.public_stopped', 'Đã tắt Public Share an toàn!'), '🛑');
         } catch (err) {
-          showToast('Không thể dừng tunnel', '❌');
+          showToast(tr('toast.tunnel_stop_err', 'Không thể dừng tunnel'), '❌');
         }
       });
     }
@@ -1060,7 +1089,7 @@
             showToast(tr('toast.pin_incorrect', 'Mã PIN không chính xác!'), '❌');
           }
         } catch (err) {
-          showToast('Lỗi kiểm tra mã PIN', '❌');
+          showToast(tr('toast.pin_check_err', 'Lỗi kiểm tra mã PIN'), '❌');
         } finally {
           btnSubmitPin.disabled = false;
         }

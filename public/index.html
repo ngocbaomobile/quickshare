@@ -35,11 +35,11 @@
           <div id="lang-dropdown-menu" class="lang-dropdown-menu hidden"></div>
         </div>
 
-        <button id="btn-toggle-public" class="btn btn-secondary btn-sm mac-only" style="border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;" title="Chia sẻ ra ngoài Internet qua Cloudflare Tunnel">
-          🌐 Public: <span id="public-status-text">TẮT</span>
+        <button id="btn-toggle-public" class="btn btn-secondary btn-sm mac-only" style="border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;" data-i18n-title="modal.public_title">
+          <span data-i18n="header.public_share">🌐 Public: </span><span id="public-status-text" data-i18n="header.public_off">TẮT</span>
         </button>
 
-        <button id="btn-show-app-qr" class="btn btn-secondary btn-sm mac-only" title="Mở mã QR kết nối điện thoại">
+        <button id="btn-show-app-qr" class="btn btn-secondary btn-sm mac-only" data-i18n-title="modal.qr_title">
           <span data-i18n="header.connect_phone">📱 Kết nối ĐT</span>
         </button>
 
@@ -113,7 +113,7 @@
                 <button id="btn-use-mac-clipboard-for-qr" class="btn btn-secondary btn-sm" data-i18n="qr.btn_paste_mac">📋 Lấy từ Clipboard Mac</button>
               </div>
 
-              <textarea id="raw-text-input" placeholder="Gõ hoặc dán nội dung text, link, mật khẩu..." style="min-height: 120px;"></textarea>
+              <textarea id="raw-text-input" placeholder="Gõ hoặc dán nội dung text, link, mật khẩu..." data-i18n-placeholder="qr.text_placeholder" style="min-height: 120px;"></textarea>
 
               <button id="btn-gen-text-qr" class="btn btn-primary">
                 <span data-i18n="qr.btn_gen_text">Tạo mã QR Văn bản</span>
@@ -134,7 +134,7 @@
             <div id="file-qr-display" class="hidden" style="display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%;">
               <div class="instant-qr-box" id="file-qrcode-box"></div>
               <div style="text-align: center;">
-                <div style="font-weight: 700; font-size: 15px; color: #fff;" id="file-qr-name">Tên tệp</div>
+                <div style="font-weight: 700; font-size: 15px; color: #fff;" id="file-qr-name" data-i18n="tab.qr_default_name">Tên tệp</div>
                 <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="file-qr-size">0 KB</div>
               </div>
               <div class="hint-pill" data-i18n="qr.scan_hint">
@@ -164,7 +164,7 @@
             <button id="btn-paste-phone" class="btn btn-secondary btn-sm phone-only" data-i18n="text.btn_paste_phone">📋 Dán từ điện thoại</button>
           </div>
 
-          <textarea id="text-input" placeholder="Dán hoặc gõ nội dung (link, tin nhắn, mã code, mật khẩu...)" style="min-height: 140px;"></textarea>
+          <textarea id="text-input" placeholder="Dán hoặc gõ nội dung (link, tin nhắn, mã code, mật khẩu...)" data-i18n-placeholder="text.placeholder" style="min-height: 140px;"></textarea>
 
           <button id="btn-send-text" class="btn btn-primary">
             <span id="btn-send-text-label" data-i18n="text.btn_send">🚀 Gửi sang máy tính</span>
@@ -179,7 +179,7 @@
           </div>
 
           <div id="mac-clipboard-content" class="clipboard-display" style="min-height: 140px;">
-            <span class="clipboard-empty">Đang đọc clipboard...</span>
+            <span class="clipboard-empty" data-i18n="text.mac_clip_reading">Đang đọc clipboard...</span>
           </div>
 
           <button id="btn-copy-to-phone" class="btn btn-secondary">
@@ -202,19 +202,19 @@
             <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden">
             <div class="media-card-icon">📸</div>
             <div class="media-card-text" data-i18n="upload.btn_camera">Chụp ảnh</div>
-            <div class="media-card-sub">Mở camera ngay</div>
+            <div class="media-card-sub" data-i18n="upload.camera_sub">Mở camera ngay</div>
           </label>
 
           <label class="media-card">
             <input type="file" id="gallery-input" multiple accept="*/*" class="hidden">
             <div class="media-card-icon">🖼️</div>
             <div class="media-card-text" data-i18n="upload.btn_gallery">Thư viện ảnh</div>
-            <div class="media-card-sub">Chọn ảnh / video / tệp</div>
+            <div class="media-card-sub" data-i18n="upload.gallery_sub">Chọn ảnh / video / tệp</div>
           </label>
         </div>
 
         <div id="selected-files-container" class="hidden" style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
-          <div style="font-size: 12px; font-weight: 600; color: var(--text-muted);" id="selected-files-count">Đã chọn:</div>
+          <div style="font-size: 12px; font-weight: 600; color: var(--text-muted);" id="selected-files-count" data-i18n="upload.selected_none">Đã chọn: Chưa có tệp nào</div>
           <div id="selected-files-list" style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 12px;"></div>
           <button id="btn-upload-files" class="btn btn-primary" style="margin-top: 6px;">
             <span data-i18n="upload.btn_start">🚀 Bắt đầu gửi tệp</span>
@@ -237,23 +237,23 @@
             </div>
           </div>
           <div style="display: flex; gap: 8px; align-items: center;">
-            <button id="btn-change-folder" class="btn btn-secondary btn-sm mac-only" title="Đổi thư mục lưu trữ" data-i18n="files.btn_change_folder">⚙️ Đổi folder</button>
-            <button id="btn-open-folder" class="btn btn-secondary btn-sm mac-only" title="Mở thư mục trên máy" data-i18n="files.btn_open_folder">📁 Mở thư mục</button>
-            <button id="btn-refresh-files" class="btn btn-secondary btn-sm" title="Làm mới">🔄</button>
+            <button id="btn-change-folder" class="btn btn-secondary btn-sm mac-only" data-i18n-title="modal.storage_title" data-i18n="files.btn_change_folder">⚙️ Đổi folder</button>
+            <button id="btn-open-folder" class="btn btn-secondary btn-sm mac-only" data-i18n-title="files.btn_open_folder" data-i18n="files.btn_open_folder">📁 Mở thư mục</button>
+            <button id="btn-refresh-files" class="btn btn-secondary btn-sm" data-i18n-title="files.btn_refresh_title">🔄</button>
           </div>
         </div>
 
         <!-- Filter & Search Toolbar -->
         <div class="file-toolbar">
           <div class="file-search-wrap">
-            <input type="text" id="file-search-input" placeholder="🔍 Tìm kiếm tệp..." data-i18n="files.search_placeholder">
+            <input type="text" id="file-search-input" placeholder="🔍 Tìm kiếm tệp..." data-i18n-placeholder="files.search_placeholder">
           </div>
           <div class="file-filter-pills">
             <button class="filter-pill active" data-filter="all" data-i18n="files.filter_all">Tất cả</button>
             <button class="filter-pill" data-filter="image" data-i18n="files.filter_images">🖼️ Ảnh</button>
             <button class="filter-pill" data-filter="doc" data-i18n="files.filter_docs">📄 Tài liệu</button>
           </div>
-          <div class="file-stats-tag" id="file-stats-tag">0 tệp</div>
+          <div class="file-stats-tag" id="file-stats-tag" data-i18n="files.stats_zero">0 tệp</div>
         </div>
 
         <div id="files-list" class="file-list">
@@ -288,21 +288,26 @@
   <!-- Modal: Single File QR (MAC ONLY) -->
   <div id="single-file-modal" class="modal-overlay mac-only">
     <div class="modal-card">
-      <div style="font-weight: 700; font-size: 15px;" id="modal-file-title">Tải Tệp Trực Tiếp</div>
-      <p style="font-size: 12px; color: var(--text-muted);">📱 Quét bằng Camera điện thoại để tải tệp tức thì:</p>
+      <div style="font-weight: 700; font-size: 15px;" id="modal-file-title" data-i18n="modal.file_qr_title">Tải Tệp Trực Tiếp</div>
+      <p style="font-size: 12px; color: var(--text-muted);" data-i18n="modal.file_qr_sub">📱 Quét bằng Camera điện thoại để tải tệp tức thì:</p>
       
-      <div id="modal-file-qrcode" class="qr-container"></div>
+      <div id="modal-file-qr" class="qr-container"></div>
       
-      <button id="btn-close-file-qr" class="btn btn-secondary" style="width: 100%;" data-i18n="modal.qr_close">Đóng</button>
+      <button id="btn-close-file-modal" class="btn btn-secondary" style="width: 100%;" data-i18n="modal.qr_close">Đóng</button>
     </div>
   </div>
 
   <!-- Modal: Cloudflare Public Tunnel Info (MAC ONLY) -->
-  <div id="tunnel-modal" class="modal-overlay mac-only">
+  <div id="public-tunnel-modal" class="modal-overlay mac-only">
     <div class="modal-card" style="max-width: 440px;">
       <div style="font-size: 32px;">🌐</div>
       <div style="font-weight: 700; font-size: 16px;" data-i18n="modal.public_title">Chia sẻ qua Internet (Public Share)</div>
       
+      <div id="tunnel-loading" class="hidden" style="text-align: center; padding: 20px; font-size: 13px; color: var(--text-muted);">
+        <span style="font-size: 24px; display: block; margin-bottom: 8px;">⏳</span>
+        <span data-i18n="modal.storage_saving">Đang lưu...</span>
+      </div>
+
       <div id="tunnel-active-box" class="hidden" style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
         <div style="font-size: 12px; color: #34d399; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); padding: 8px 12px; border-radius: 10px;" data-i18n="modal.public_active_title">
           ✅ Public Tunnel đang hoạt động!
@@ -311,19 +316,19 @@
           Người nhận quét mã hoặc mở link sau, nhập mã PIN để tải/gửi tệp:
         </p>
 
-        <div id="tunnel-qrcode" class="qr-container" style="padding: 10px;"></div>
+        <div id="public-qrcode" class="qr-container" style="padding: 10px;"></div>
 
         <div style="background: #0f172a; padding: 10px; border-radius: 10px; border: 1px solid var(--card-border); font-size: 12px; text-align: left;">
           <div style="color: var(--text-muted); font-size: 10px; text-transform: uppercase;" data-i18n="modal.public_link_label">Public Link:</div>
-          <div id="tunnel-url-text" style="font-family: monospace; color: #38bdf8; word-break: break-all; margin: 4px 0 8px;">...</div>
+          <div id="public-share-link" style="font-family: monospace; color: #38bdf8; word-break: break-all; margin: 4px 0 8px;">...</div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #1e293b; padding-top: 8px;">
             <span style="color: var(--text-muted);" data-i18n="modal.public_pin_label">Mã PIN bảo mật:</span>
-            <span id="tunnel-pin-text" style="font-family: monospace; font-size: 16px; font-weight: 700; color: #facc15; letter-spacing: 2px;">....</span>
+            <span id="public-pin-badge" style="font-family: monospace; font-size: 16px; font-weight: 700; color: #facc15; letter-spacing: 2px;">....</span>
           </div>
         </div>
 
-        <button id="btn-copy-tunnel-link" class="btn btn-secondary" style="width: 100%;" data-i18n="modal.public_btn_copy">
+        <button id="btn-copy-public-link" class="btn btn-secondary" style="width: 100%;" data-i18n="modal.public_btn_copy">
           📋 Copy Link + PIN
         </button>
         <button id="btn-stop-tunnel" class="btn btn-secondary" style="width: 100%; color: #ef4444; border-color: rgba(239, 68, 68, 0.4);" data-i18n="modal.public_btn_stop">
@@ -359,7 +364,7 @@
         <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;" data-i18n="modal.storage_label">
           Đường dẫn thư mục:
         </label>
-        <input type="text" id="input-storage-dir" placeholder="ví dụ: ~/Desktop/QuickShare" data-i18n="modal.storage_input_placeholder" style="width: 100%; box-sizing: border-box; padding: 10px 12px; font-family: monospace; font-size: 13px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--input-border); color: #fff; outline: none;">
+        <input type="text" id="input-storage-dir" placeholder="ví dụ: ~/Desktop/QuickShare" data-i18n-placeholder="modal.storage_input_placeholder" style="width: 100%; box-sizing: border-box; padding: 10px 12px; font-family: monospace; font-size: 13px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--input-border); color: #fff; outline: none;">
       </div>
 
       <div style="margin-bottom: 16px;">
@@ -401,7 +406,7 @@
   <div id="image-preview-modal" class="modal-overlay">
     <div class="modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-        <span id="preview-modal-filename" style="font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">Tên ảnh</span>
+        <span id="preview-modal-filename" data-i18n="modal.preview_title" style="font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">Tên ảnh</span>
         <button id="btn-close-preview-modal" class="btn-close" style="background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
       </div>
       <img id="preview-modal-img" src="" alt="Preview">
@@ -415,7 +420,7 @@
   <!-- Toast -->
   <div id="toast">
     <span id="toast-icon">✅</span>
-    <span id="toast-text">Thông báo</span>
+    <span id="toast-text" data-i18n="toast.default">Thông báo</span>
   </div>
 
   <script src="/app.js"></script>
