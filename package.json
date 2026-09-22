@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node server.js",
     "daemon": "node daemon.js",
-    "stop": "kill -9 $(lsof -t -i :5050) 2>/dev/null || true"
+    "stop": "kill -9 $(lsof -t -i :5050) 2>/dev/null || true",
+    "benchmark": "node benchmark.js"
   },
   "keywords": [
     "quickshare",

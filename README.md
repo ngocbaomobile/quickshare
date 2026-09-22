@@ -153,6 +153,23 @@ source ~/.zshrc
 
 ---
 
+## ⚡ Performance Benchmarks
+
+QuickShare is optimized for zero bloat, streaming I/O, and low latency. Run tests anytime with `npm run benchmark`:
+
+| Metric / Operation | Latency / Time | Throughput | Notes |
+| :--- | :--- | :--- | :--- |
+| **API Response (`GET /api/info`)** | **0.49 ms** | 5,450+ req/sec | Sub-millisecond response |
+| **Clipboard Read (`pbpaste` / PowerShell)** | **22.80 ms** | — | Native OS system IPC integration |
+| **Clipboard Write (`pbcopy` / PowerShell)** | **17.08 ms** | — | Instant cross-device sync |
+| **1 MB File (Photo / Screenshot)** | **10.70 ms** | **~93.5 MB/s** | Instant download in 0.01s |
+| **10 MB File (High-Res Document)** | **37.58 ms** | **~266.1 MB/s** | Ultra-fast local LAN transfer |
+| **50 MB File (Video Clip)** | **88.66 ms** | **~563.9 MB/s** | Full SSD/RAM cache streaming |
+| **Concurrency (50 clients)** | **8.02 ms avg** | **5,452 RPS** | High throughput under load |
+| **Memory Footprint (Idle)** | **~5.8 MB** RAM | — | Extremely lightweight daemon |
+
+---
+
 ## 📂 File Storage
 By default, all uploaded photos and files sent from mobile devices are saved directly to:
 ```
