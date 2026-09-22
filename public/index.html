@@ -88,53 +88,66 @@
           <button class="subtab-btn" id="subtab-text-mode" data-i18n="qr.subtab_text">🔤 Văn bản (Text thô)</button>
         </div>
 
-        <!-- File Mode -->
-        <div id="instant-qr-file-section" style="display: flex; flex-direction: column; gap: 12px;">
-          <label id="instant-dropzone" class="media-card" style="padding: 16px;">
-            <input type="file" id="instant-file-input" class="hidden">
-            <div class="media-card-icon">📂</div>
-            <div class="media-card-text" data-i18n="qr.dropzone_text">Kéo thả hoặc Bấm chọn Tệp / Ảnh từ Mac</div>
-            <div class="media-card-sub" data-i18n="qr.dropzone_sub">Hỗ trợ mọi định dạng (Ảnh, PDF, Video, Zip...)</div>
-          </label>
+        <div class="qr-dashboard-grid">
+          <!-- Left Column: Mode Input -->
+          <div style="display: flex; flex-direction: column; gap: 14px;">
+            <!-- File Mode -->
+            <div id="instant-qr-file-section" style="display: flex; flex-direction: column; gap: 12px;">
+              <label id="instant-dropzone" class="media-card">
+                <input type="file" id="instant-file-input" class="hidden">
+                <div class="media-card-icon">📂</div>
+                <div class="media-card-text" data-i18n="qr.dropzone_text">Kéo thả hoặc Bấm chọn Tệp / Ảnh từ Mac</div>
+                <div class="media-card-sub" data-i18n="qr.dropzone_sub">Hỗ trợ mọi định dạng (Ảnh, PDF, Video, Zip...)</div>
+              </label>
 
-          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; color: #34d399; background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 10px 14px; text-align: center;">
-            <span style="font-size: 16px;">⚡</span>
-            <span data-i18n="qr.or_paste"><b>Phím tắt Mac:</b> Chụp màn hình xong bấm <b>Cmd + V</b> bất kỳ đâu trên trang này để sinh mã QR tức thì!</span>
-          </div>
-
-          <!-- Generated QR Container -->
-          <div id="file-qr-display" class="hidden" style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
-            <div class="instant-qr-box" id="file-qrcode-box"></div>
-            
-            <div style="text-align: center;">
-              <div style="font-weight: 600; font-size: 14px; color: #fff;" id="file-qr-name">Tên tệp</div>
-              <div style="font-size: 12px; color: var(--text-muted);" id="file-qr-size">0 KB</div>
+              <div style="display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 12px; color: #34d399; background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 12px 14px; text-align: center;">
+                <span style="font-size: 18px;">⚡</span>
+                <span data-i18n="qr.or_paste"><b>Phím tắt Mac:</b> Chụp màn hình xong bấm <kbd>⌘</kbd> + <kbd>V</kbd> bất kỳ đâu trên trang này để sinh mã QR tức thì!</span>
+              </div>
             </div>
 
-            <div class="hint-pill" data-i18n="qr.scan_hint">
-              📱 <b>Quét tải tức thì:</b> Mở Camera iPhone hoặc Samsung chĩa vào mã trên -> Chạm vào link hiện lên -> File sẽ <b>tự động tải về máy</b> mà không qua web!
+            <!-- Text Mode -->
+            <div id="instant-qr-text-section" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; color: var(--text-muted);" data-i18n="qr.text_placeholder">Nhập văn bản cần sinh QR:</span>
+                <button id="btn-use-mac-clipboard-for-qr" class="btn btn-secondary btn-sm" data-i18n="qr.btn_paste_mac">📋 Lấy từ Clipboard Mac</button>
+              </div>
+
+              <textarea id="raw-text-input" placeholder="Gõ hoặc dán nội dung text, link, mật khẩu..." style="min-height: 120px;"></textarea>
+
+              <button id="btn-gen-text-qr" class="btn btn-primary">
+                <span data-i18n="qr.btn_gen_text">Tạo mã QR Văn bản</span>
+              </button>
             </div>
           </div>
-        </div>
 
-        <!-- Text Mode -->
-        <div id="instant-qr-text-section" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12px; color: var(--text-muted);" data-i18n="qr.text_placeholder">Nhập văn bản cần sinh QR:</span>
-            <button id="btn-use-mac-clipboard-for-qr" class="btn btn-secondary btn-sm" data-i18n="qr.btn_paste_mac">📋 Lấy từ Clipboard Mac</button>
-          </div>
+          <!-- Right Column: QR Presentation Showcase -->
+          <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 16px; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--card-border); border-radius: var(--radius-lg); padding: 24px; min-height: 280px;">
+            <!-- Empty state -->
+            <div id="qr-empty-placeholder" style="text-align: center; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 10px;">
+              <div style="font-size: 48px; opacity: 0.6;">🎯</div>
+              <div style="font-weight: 600; font-size: 15px; color: var(--text);">Khu vực hiển thị mã QR</div>
+              <div style="font-size: 12px; max-width: 260px; line-height: 1.5; color: var(--text-muted);">Chọn tệp hoặc dán ảnh/text bên trái để tạo mã quét ngay cho điện thoại.</div>
+            </div>
 
-          <textarea id="raw-text-input" placeholder="Gõ hoặc dán nội dung text, link, mật khẩu..."></textarea>
+            <!-- Generated File QR -->
+            <div id="file-qr-display" class="hidden" style="display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%;">
+              <div class="instant-qr-box" id="file-qrcode-box"></div>
+              <div style="text-align: center;">
+                <div style="font-weight: 700; font-size: 15px; color: #fff;" id="file-qr-name">Tên tệp</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="file-qr-size">0 KB</div>
+              </div>
+              <div class="hint-pill" data-i18n="qr.scan_hint">
+                📱 <b>Quét tải tức thì:</b> Mở Camera iPhone hoặc Samsung chĩa vào mã trên -> Chạm vào link hiện lên -> Tự động tải về máy!
+              </div>
+            </div>
 
-          <button id="btn-gen-text-qr" class="btn btn-primary">
-            <span data-i18n="qr.btn_gen_text">Tạo mã QR Văn bản</span>
-          </button>
-
-          <div id="text-qr-display" class="hidden" style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 6px;">
-            <div class="instant-qr-box" id="text-qrcode-box"></div>
-
-            <div class="hint-pill" style="color: #60a5fa; background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2);" data-i18n="qr.text_hint">
-              ✨ <b>Không cần mạng / web:</b> Chĩa Camera iPhone hoặc Samsung vào mã -> Camera tự hiện nội dung và có nút <b>"Sao chép văn bản" (Copy)</b> ngay trên Camera!
+            <!-- Generated Text QR -->
+            <div id="text-qr-display" class="hidden" style="display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%;">
+              <div class="instant-qr-box" id="text-qrcode-box"></div>
+              <div class="hint-pill" style="color: #60a5fa; background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.25);" data-i18n="qr.text_hint">
+                ✨ <b>Không cần mạng / web:</b> Chĩa Camera iPhone hoặc Samsung vào mã -> Camera tự hiện nội dung và có nút <b>"Sao chép văn bản" (Copy)</b> ngay trên Camera!
+              </div>
             </div>
           </div>
         </div>
@@ -143,35 +156,37 @@
 
     <!-- TAB 2: TEXT SYNC (BI-DIRECTIONAL CLIPBOARD) -->
     <div id="tab-text" class="tab-content hidden">
-      <!-- Box 1: Send text to Mac -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-title" id="text-box1-title" data-i18n="text.card_title_phone">🚀 Gửi Text vào Máy tính</div>
-          <button id="btn-paste-phone" class="btn btn-secondary btn-sm phone-only" data-i18n="text.btn_paste_phone">📋 Dán từ điện thoại</button>
+      <div class="desktop-two-col">
+        <!-- Box 1: Send text to Mac -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" id="text-box1-title" data-i18n="text.card_title_phone">🚀 Gửi Text vào Máy tính</div>
+            <button id="btn-paste-phone" class="btn btn-secondary btn-sm phone-only" data-i18n="text.btn_paste_phone">📋 Dán từ điện thoại</button>
+          </div>
+
+          <textarea id="text-input" placeholder="Dán hoặc gõ nội dung (link, tin nhắn, mã code, mật khẩu...)" style="min-height: 140px;"></textarea>
+
+          <button id="btn-send-text" class="btn btn-primary">
+            <span id="btn-send-text-label" data-i18n="text.btn_send">🚀 Gửi sang máy tính</span>
+          </button>
         </div>
 
-        <textarea id="text-input" placeholder="Dán hoặc gõ nội dung (link, tin nhắn, mã code, mật khẩu...)"></textarea>
+        <!-- Box 2: Read Mac Clipboard -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title" data-i18n="text.mac_clip_title">💻 Clipboard hiện tại trên Máy tính</div>
+            <button id="btn-refresh-clipboard" class="btn btn-secondary btn-sm" data-i18n="text.btn_refresh">🔄 Làm mới</button>
+          </div>
 
-        <button id="btn-send-text" class="btn btn-primary">
-          <span id="btn-send-text-label" data-i18n="text.btn_send">🚀 Gửi sang máy tính</span>
-        </button>
-      </div>
+          <div id="mac-clipboard-content" class="clipboard-display" style="min-height: 140px;">
+            <span class="clipboard-empty">Đang đọc clipboard...</span>
+          </div>
 
-      <!-- Box 2: Read Mac Clipboard -->
-      <div class="card" style="margin-top: 16px;">
-        <div class="card-header">
-          <div class="card-title" data-i18n="text.mac_clip_title">💻 Clipboard hiện tại trên Máy tính</div>
-          <button id="btn-refresh-clipboard" class="btn btn-secondary btn-sm" data-i18n="text.btn_refresh">🔄 Làm mới</button>
+          <button id="btn-copy-to-phone" class="btn btn-secondary">
+            <span class="phone-only" data-i18n="text.btn_copy_phone">📋 Sao chép</span>
+            <span class="mac-only" data-i18n="text.btn_copy_phone">📋 Sao chép</span>
+          </button>
         </div>
-
-        <div id="mac-clipboard-content" class="clipboard-display">
-          <span class="clipboard-empty">Đang đọc clipboard...</span>
-        </div>
-
-        <button id="btn-copy-to-phone" class="btn btn-secondary">
-          <span class="phone-only" data-i18n="text.btn_copy_phone">📋 Sao chép</span>
-          <span class="mac-only" data-i18n="text.btn_copy_phone">📋 Sao chép</span>
-        </button>
       </div>
     </div>
 
@@ -208,24 +223,37 @@
       </div>
     </div>
 
-    <!-- TAB 4: FILES LIST (SHARED FILES & DOWNLOADS) -->
+    <!-- TAB 4: FILES LIST (SHARED FILES & DOWNLOADS PRO MAX) -->
     <div id="tab-files" class="tab-content hidden">
-      <div class="card">
-        <div class="card-header" style="flex-wrap: wrap; gap: 8px;">
-          <div class="card-title" style="flex: 1; min-width: 200px;">
+      <div class="card" id="shared-files-card">
+        <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
+          <div class="card-title" style="flex: 1; min-width: 220px;">
             <div style="display: flex; align-items: center; justify-content: space-between;">
               <span class="phone-only" data-i18n="files.title_phone">📂 Tệp từ máy tính gửi sang</span>
               <span class="mac-only" data-i18n="files.title_mac">📂 Tệp QuickShare</span>
             </div>
-            <div class="mac-only" style="font-size: 11px; color: var(--text-muted); font-weight: normal; margin-top: 2px;">
-              <span data-i18n="files.storage_label">Lưu tại:</span> <span id="storage-dir-path" style="color: var(--primary); font-family: monospace;">~/Downloads/QuickShare</span>
+            <div class="mac-only" style="font-size: 12px; color: var(--text-muted); font-weight: normal; margin-top: 3px;">
+              <span data-i18n="files.storage_label">Lưu tại:</span> <span id="storage-dir-path" style="color: var(--primary); font-family: monospace; background: rgba(16, 185, 129, 0.1); padding: 2px 6px; border-radius: 6px;">~/Downloads/QuickShare</span>
             </div>
           </div>
-          <div style="display: flex; gap: 6px; align-items: center;">
+          <div style="display: flex; gap: 8px; align-items: center;">
             <button id="btn-change-folder" class="btn btn-secondary btn-sm mac-only" title="Đổi thư mục lưu trữ" data-i18n="files.btn_change_folder">⚙️ Đổi folder</button>
             <button id="btn-open-folder" class="btn btn-secondary btn-sm mac-only" title="Mở thư mục trên máy" data-i18n="files.btn_open_folder">📁 Mở thư mục</button>
             <button id="btn-refresh-files" class="btn btn-secondary btn-sm" title="Làm mới">🔄</button>
           </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="file-toolbar">
+          <div class="file-search-wrap">
+            <input type="text" id="file-search-input" placeholder="🔍 Tìm kiếm tệp..." data-i18n="files.search_placeholder">
+          </div>
+          <div class="file-filter-pills">
+            <button class="filter-pill active" data-filter="all" data-i18n="files.filter_all">Tất cả</button>
+            <button class="filter-pill" data-filter="image" data-i18n="files.filter_images">🖼️ Ảnh</button>
+            <button class="filter-pill" data-filter="doc" data-i18n="files.filter_docs">📄 Tài liệu</button>
+          </div>
+          <div class="file-stats-tag" id="file-stats-tag">0 tệp</div>
         </div>
 
         <div id="files-list" class="file-list">
@@ -366,6 +394,21 @@
       <button id="btn-submit-pin" class="btn btn-primary" style="width: 100%;" data-i18n="modal.pin_btn">
         Mở khóa dữ liệu
       </button>
+    </div>
+  </div>
+
+  <!-- Modal: Image / Media Preview Lightbox -->
+  <div id="image-preview-modal" class="modal-overlay">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+        <span id="preview-modal-filename" style="font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%;">Tên ảnh</span>
+        <button id="btn-close-preview-modal" class="btn-close" style="background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+      </div>
+      <img id="preview-modal-img" src="" alt="Preview">
+      <div style="display: flex; gap: 10px; width: 100%; justify-content: flex-end;">
+        <a id="preview-modal-download" href="#" download class="btn btn-primary btn-sm" data-i18n="files.btn_download">⬇️ Tải về</a>
+        <button id="btn-close-preview-action" class="btn btn-secondary btn-sm" data-i18n="modal.qr_close">Đóng</button>
+      </div>
     </div>
   </div>
 

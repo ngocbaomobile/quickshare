@@ -224,6 +224,8 @@
           });
 
           fileQrDisplay.classList.remove('hidden');
+          const qrPlaceholder = document.getElementById('qr-empty-placeholder');
+          if (qrPlaceholder) qrPlaceholder.classList.add('hidden');
           showToast('Đã tạo mã QR tải trực tiếp!', '🎯');
           loadFiles();
         } else {
@@ -310,6 +312,8 @@
         });
 
         textQrDisplay.classList.remove('hidden');
+        const qrPlaceholder = document.getElementById('qr-empty-placeholder');
+        if (qrPlaceholder) qrPlaceholder.classList.add('hidden');
         showToast('Đã tạo mã QR văn bản!', '✨');
       });
     }
@@ -448,48 +452,192 @@
       });
     }
 
-    // --- TAB: FILES & DOWNLOADS LIST ---
+    // --- TAB: FILES & DOWNLOADS LIST (PRO MAX) ---
+    let allLoadedFiles = [];
+    let currentFilter = 'all';
+
     async function loadFiles() {
       try {
         const res = await apiFetch('/api/files');
         const data = await res.json();
-        if (!data.files || data.files.length === 0) {
-          filesList.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 24px;">${typeof t === 'function' ? t('files.empty') : 'Chưa có file nào'}</div>`;
-          return;
-        }
-
-        filesList.innerHTML = data.files.map((f) => `
-          <div class="file-item">
-            <div class="file-info">
-              <div class="file-icon">${f.is_image ? '🖼️' : '📄'}</div>
-              <div>
-                <div class="file-name" title="${f.name}">${f.name}</div>
-                <div class="file-size">${formatBytes(f.size)}</div>
-              </div>
-            </div>
-            <div class="file-actions">
-              ${f.is_image ? `
-                <button onclick="saveToGallery('${encodeURIComponent(f.name)}')" class="btn btn-sm phone-only" style="background: #2563eb; color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.3);" title="Lưu vào Cuộn ảnh / Gallery">
-                  ${typeof t === 'function' ? t('files.btn_album') : '🖼️ Album'}
-                </button>
-              ` : ''}
-              <button onclick="showFileQr('${encodeURIComponent(f.name)}', '${f.direct_url}')" class="btn btn-secondary btn-sm mac-only" title="Hiện mã QR để điện thoại quét tải thẳng">
-                📱 QR
-              </button>
-              <a href="/api/download/${encodeURIComponent(f.name)}" download="${f.name}" class="btn btn-primary btn-sm" style="text-decoration: none;">
-                ${typeof t === 'function' ? t('files.btn_download') : '⬇️ Tải'}
-              </a>
-              <button onclick="deleteFile('${f.name}')" class="btn btn-secondary btn-sm mac-only" style="color: #f87171;">
-                ${typeof t === 'function' ? t('files.btn_delete') : '🗑️'}
-              </button>
-            </div>
-          </div>
-        `).join('');
+        allLoadedFiles = data.files || [];
+        renderFiles();
       } catch (err) {
         filesList.innerHTML = `<div style="text-align: center; color: #f87171; font-size: 13px; padding: 24px;">${typeof t === 'function' ? t('files.loading') : 'Không thể tải danh sách file.'}</div>`;
       }
     }
+
+    function renderFiles() {
+      const searchInput = document.getElementById('file-search-input');
+      const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+      const statsTag = document.getElementById('file-stats-tag');
+
+      let filtered = allLoadedFiles.filter(f => {
+        if (query && !f.name.toLowerCase().includes(query)) return false;
+        if (currentFilter === 'image') return f.is_image;
+        if (currentFilter === 'doc') {
+          const ext = f.name.split('.').pop().toLowerCase();
+          return ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'md', 'json', 'csv'].includes(ext);
+        }
+        return true;
+      });
+
+      if (statsTag) {
+        const totalBytes = allLoadedFiles.reduce((acc, cur) => acc + (cur.size || 0), 0);
+        statsTag.innerText = `${allLoadedFiles.length} tệp • ${formatBytes(totalBytes)}`;
+      }
+
+      if (filtered.length === 0) {
+        filesList.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 32px;">${typeof t === 'function' ? t('files.empty') : 'Chưa có file nào'}</div>`;
+        return;
+      }
+
+      filesList.innerHTML = filtered.map((f) => {
+        const isImg = f.is_image;
+        const safeName = f.name.replace(/"/g, '&quot;');
+        const encName = encodeURIComponent(f.name);
+        return `
+          <div class="file-item">
+            <div class="file-info">
+              ${isImg ? `
+                <div class="file-thumb-wrap" onclick="previewImage('${encName}', '${f.direct_url}')" title="Bấm để xem ảnh lớn">
+                  <img src="${f.direct_url}" class="file-thumb-img" alt="${safeName}" loading="lazy" onerror="this.parentElement.innerHTML='🖼️'">
+                </div>
+              ` : `
+                <div class="file-icon">📄</div>
+              `}
+              <div class="file-details">
+                <div class="file-name" title="${safeName}">${safeName}</div>
+                <div class="file-meta-row">
+                  <span class="file-size">${formatBytes(f.size)}</span>
+                  ${isImg ? '<span style="color: #38bdf8;">• Ảnh</span>' : ''}
+                </div>
+              </div>
+            </div>
+            <div class="file-actions">
+              ${isImg ? `
+                <button onclick="previewImage('${encName}', '${f.direct_url}')" class="btn btn-secondary btn-sm mac-only" title="Xem ảnh lớn">
+                  👁️
+                </button>
+                <button onclick="saveToGallery('${encName}')" class="btn btn-sm phone-only" style="background: #2563eb; color: #fff;" title="Lưu vào Cuộn ảnh / Gallery">
+                  🖼️ Album
+                </button>
+              ` : ''}
+              <button onclick="showFileQr('${encName}', '${f.direct_url}')" class="btn btn-secondary btn-sm mac-only" title="Hiện mã QR để điện thoại quét tải thẳng">
+                📱 QR
+              </button>
+              <a href="/api/download/${encName}" download="${safeName}" class="btn btn-primary btn-sm" style="text-decoration: none;">
+                ⬇️ Tải
+              </a>
+              <button onclick="deleteFile('${safeName}')" class="btn btn-secondary btn-sm mac-only" style="color: #f87171;" title="Xoá file">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
     btnRefreshFiles.addEventListener('click', loadFiles);
+
+    // Search and Filter Listeners
+    const fileSearchInput = document.getElementById('file-search-input');
+    if (fileSearchInput) {
+      fileSearchInput.addEventListener('input', renderFiles);
+    }
+
+    document.querySelectorAll('.filter-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter || 'all';
+        renderFiles();
+      });
+    });
+
+    // Lightbox Image Preview Modal
+    const imagePreviewModal = document.getElementById('image-preview-modal');
+    const previewModalImg = document.getElementById('preview-modal-img');
+    const previewModalFilename = document.getElementById('preview-modal-filename');
+    const previewModalDownload = document.getElementById('preview-modal-download');
+    const btnClosePreviewModal = document.getElementById('btn-close-preview-modal');
+    const btnClosePreviewAction = document.getElementById('btn-close-preview-action');
+
+    window.previewImage = function(encName, url) {
+      if (!imagePreviewModal) return;
+      const filename = decodeURIComponent(encName);
+      if (previewModalFilename) previewModalFilename.innerText = filename;
+      if (previewModalImg) previewModalImg.src = url;
+      if (previewModalDownload) {
+        previewModalDownload.href = url;
+        previewModalDownload.download = filename;
+      }
+      imagePreviewModal.classList.add('active');
+    };
+
+    function closePreviewModal() {
+      if (imagePreviewModal) {
+        imagePreviewModal.classList.remove('active');
+        if (previewModalImg) previewModalImg.src = '';
+      }
+    }
+    if (btnClosePreviewModal) btnClosePreviewModal.addEventListener('click', closePreviewModal);
+    if (btnClosePreviewAction) btnClosePreviewAction.addEventListener('click', closePreviewModal);
+    if (imagePreviewModal) {
+      imagePreviewModal.addEventListener('click', (e) => {
+        if (e.target === imagePreviewModal) closePreviewModal();
+      });
+    }
+
+    // Drag & Drop Upload directly onto Shared Files Card (Desktop)
+    const sharedFilesCard = document.getElementById('shared-files-card');
+    if (sharedFilesCard) {
+      ['dragenter', 'dragover'].forEach(eventName => {
+        sharedFilesCard.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          sharedFilesCard.style.borderColor = '#10b981';
+          sharedFilesCard.style.boxShadow = '0 0 25px rgba(16, 185, 129, 0.3)';
+        });
+      });
+      ['dragleave', 'dragend'].forEach(eventName => {
+        sharedFilesCard.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          sharedFilesCard.style.borderColor = '';
+          sharedFilesCard.style.boxShadow = '';
+        });
+      });
+      sharedFilesCard.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        sharedFilesCard.style.borderColor = '';
+        sharedFilesCard.style.boxShadow = '';
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+          handleDesktopFilesUpload(Array.from(dt.files));
+        }
+      });
+    }
+
+    async function handleDesktopFilesUpload(files) {
+      if (files.length === 0) return;
+      showToast(`Đang tải ${files.length} file lên QuickShare...`, '⏳');
+      const formData = new FormData();
+      files.forEach(f => formData.append('files', f));
+      try {
+        const res = await apiFetch('/api/upload', { method: 'POST', body: formData });
+        if (res.ok) {
+          showToast(`Đã tải lên ${files.length} file thành công!`, '🎉');
+          loadFiles();
+        } else {
+          const data = await res.json();
+          showToast(data.error || 'Lỗi tải file', '❌');
+        }
+      } catch (err) {
+        showToast('Lỗi kết nối khi tải file', '❌');
+      }
+    }
 
     // Show dedicated file download QR modal (Mac only)
     window.showFileQr = function(filename, directUrl) {
