@@ -126,8 +126,8 @@
             <!-- Empty state -->
             <div id="qr-empty-placeholder" style="text-align: center; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 10px;">
               <div style="font-size: 48px; opacity: 0.6;">🎯</div>
-              <div style="font-weight: 600; font-size: 15px; color: var(--text);">Khu vực hiển thị mã QR</div>
-              <div style="font-size: 12px; max-width: 260px; line-height: 1.5; color: var(--text-muted);">Chọn tệp hoặc dán ảnh/text bên trái để tạo mã quét ngay cho điện thoại.</div>
+              <div style="font-weight: 600; font-size: 15px; color: var(--text);" data-i18n="qr.placeholder_title">Khu vực hiển thị mã QR</div>
+              <div style="font-size: 12px; max-width: 260px; line-height: 1.5; color: var(--text-muted);" data-i18n="qr.placeholder_sub">Chọn tệp hoặc dán ảnh/text bên trái để tạo mã quét ngay cho điện thoại.</div>
             </div>
 
             <!-- Generated File QR -->
@@ -314,11 +314,11 @@
         <div id="tunnel-qrcode" class="qr-container" style="padding: 10px;"></div>
 
         <div style="background: #0f172a; padding: 10px; border-radius: 10px; border: 1px solid var(--card-border); font-size: 12px; text-align: left;">
-          <div style="color: var(--text-muted); font-size: 10px; text-transform: uppercase;">Public Link:</div>
+          <div style="color: var(--text-muted); font-size: 10px; text-transform: uppercase;" data-i18n="modal.public_link_label">Public Link:</div>
           <div id="tunnel-url-text" style="font-family: monospace; color: #38bdf8; word-break: break-all; margin: 4px 0 8px;">...</div>
 
           <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #1e293b; padding-top: 8px;">
-            <span style="color: var(--text-muted);">Mã PIN bảo mật:</span>
+            <span style="color: var(--text-muted);" data-i18n="modal.public_pin_label">Mã PIN bảo mật:</span>
             <span id="tunnel-pin-text" style="font-family: monospace; font-size: 16px; font-weight: 700; color: #facc15; letter-spacing: 2px;">....</span>
           </div>
         </div>
@@ -359,7 +359,7 @@
         <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;" data-i18n="modal.storage_label">
           Đường dẫn thư mục:
         </label>
-        <input type="text" id="input-storage-dir" placeholder="ví dụ: ~/Desktop/QuickShare" style="width: 100%; box-sizing: border-box; padding: 10px 12px; font-family: monospace; font-size: 13px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--input-border); color: #fff; outline: none;">
+        <input type="text" id="input-storage-dir" placeholder="ví dụ: ~/Desktop/QuickShare" data-i18n="modal.storage_input_placeholder" style="width: 100%; box-sizing: border-box; padding: 10px 12px; font-family: monospace; font-size: 13px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--input-border); color: #fff; outline: none;">
       </div>
 
       <div style="margin-bottom: 16px;">

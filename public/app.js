@@ -40,9 +40,20 @@
       });
     }
 
+    const tr = (key, fallback, params) => {
+      if (typeof t === 'function') {
+        const val = t(key, params);
+        if (val && val !== key) return val;
+      }
+      return fallback;
+    };
+
     window.addEventListener('languageChanged', () => {
       updateTitles();
       loadFiles();
+      loadInfo();
+      loadClipboard();
+      checkTunnelStatus();
     });
 
     if (window.renderLanguageDropdown) {
@@ -164,7 +175,7 @@
         const res = await apiFetch('/api/info');
         const data = await res.json();
         if (isMobile) {
-          macIpLabel.innerText = `Kết nối với Mac: ${data.local_ip}`;
+          macIpLabel.innerText = tr('header.connected_mac', `Kết nối với Mac: ${data.local_ip}`, { ip: data.local_ip });
         } else {
           macIpLabel.innerText = `Wi-Fi IP: ${data.local_ip}:${data.port}`;
         }
@@ -182,7 +193,7 @@
           });
         }
       } catch (err) {
-        macIpLabel.innerText = 'Chưa kết nối được với server';
+        macIpLabel.innerText = tr('header.disconnected', 'Chưa kết nối được với server');
       }
     }
 
@@ -200,7 +211,7 @@
       const formData = new FormData();
       formData.append('file', file);
 
-      showToast('Đang tải file và sinh mã QR...', '⏳');
+      showToast(tr('toast.qr_generating', 'Đang tải file và sinh mã QR...'), '⏳');
 
       try {
         const res = await apiFetch('/api/quick-qr-file', {
@@ -226,13 +237,13 @@
           fileQrDisplay.classList.remove('hidden');
           const qrPlaceholder = document.getElementById('qr-empty-placeholder');
           if (qrPlaceholder) qrPlaceholder.classList.add('hidden');
-          showToast('Đã tạo mã QR tải trực tiếp!', '🎯');
+          showToast(tr('toast.qr_created', 'Đã tạo mã QR tải trực tiếp!'), '🎯');
           loadFiles();
         } else {
-          showToast(data.error || 'Lỗi tải file', '❌');
+          showToast(data.error || tr('toast.upload_error', 'Lỗi tải file'), '❌');
         }
       } catch (err) {
-        showToast('Lỗi khi tải file lên Mac', '❌');
+        showToast(tr('toast.qr_upload_err', 'Lỗi khi tải file lên Mac'), '❌');
       }
     }
 
@@ -293,11 +304,11 @@
       btnGenTextQr.addEventListener('click', () => {
         const text = rawTextInput.value.trim();
         if (!text) {
-          showToast('Vui lòng nhập văn bản!', '⚠️');
+          showToast(tr('toast.enter_text', 'Vui lòng nhập văn bản!'), '⚠️');
           return;
         }
         if (text.length > 2500) {
-          showToast('Văn bản quá dài (>2500 ký tự)!', '⚠️');
+          showToast(tr('toast.text_too_long', 'Văn bản quá dài (>2500 ký tự)!'), '⚠️');
           return;
         }
 
@@ -314,7 +325,7 @@
         textQrDisplay.classList.remove('hidden');
         const qrPlaceholder = document.getElementById('qr-empty-placeholder');
         if (qrPlaceholder) qrPlaceholder.classList.add('hidden');
-        showToast('Đã tạo mã QR văn bản!', '✨');
+        showToast(tr('toast.qr_text_created', 'Đã tạo mã QR văn bản!'), '✨');
       });
     }
 
@@ -325,7 +336,7 @@
           rawTextInput.value = currentMacClipboard;
           btnGenTextQr.click();
         } else {
-          showToast('Clipboard Mac trống!', '⚠️');
+          showToast(tr('toast.clipboard_empty', 'Clipboard Mac trống!'), '⚠️');
         }
       });
     }
@@ -334,7 +345,7 @@
     btnSendText.addEventListener('click', async () => {
       const text = textInput.value.trim();
       if (!text) {
-        showToast('Vui lòng nhập văn bản cần gửi!', '⚠️');
+        showToast(tr('toast.enter_text', 'Vui lòng nhập văn bản cần gửi!'), '⚠️');
         return;
       }
       btnSendText.disabled = true;
@@ -346,14 +357,14 @@
         });
         const data = await res.json();
         if (res.ok) {
-          showToast('Đã nạp vào Clipboard Mac (Cmd + V)!', '🚀');
+          showToast(tr('toast.sent_text', 'Đã nạp vào Clipboard Mac (Cmd + V)!'), '🚀');
           textInput.value = '';
           loadClipboard();
         } else {
           showToast(data.error || 'Lỗi gửi text', '❌');
         }
       } catch (err) {
-        showToast('Không thể kết nối với Mac', '❌');
+        showToast(tr('toast.text_send_err', 'Không thể kết nối với Mac'), '❌');
       } finally {
         btnSendText.disabled = false;
       }
@@ -364,10 +375,10 @@
         try {
           const text = await navigator.clipboard.readText();
           textInput.value = text;
-          showToast('Đã dán text từ điện thoại!', '📋');
+          showToast(tr('toast.paste_phone', 'Đã dán text từ điện thoại!'), '📋');
         } catch (err) {
           textInput.focus();
-          showToast('Hãy dán trực tiếp vào ô văn bản', '💡');
+          showToast(tr('toast.paste_direct_hint', 'Hãy dán trực tiếp vào ô văn bản'), '💡');
         }
       });
     }
@@ -380,24 +391,24 @@
         if (currentMacClipboard) {
           macClipboardContent.innerText = currentMacClipboard;
         } else {
-          macClipboardContent.innerHTML = '<span class="clipboard-empty">Clipboard trên Mac hiện đang trống</span>';
+          macClipboardContent.innerHTML = `<span class="clipboard-empty">${tr('text.mac_clip_empty', 'Clipboard trên Mac hiện đang trống')}</span>`;
         }
       } catch (err) {
-        macClipboardContent.innerHTML = '<span class="clipboard-empty">Lỗi đọc clipboard Mac</span>';
+        macClipboardContent.innerHTML = `<span class="clipboard-empty">${tr('text.mac_clip_err', 'Lỗi đọc clipboard Mac')}</span>`;
       }
     }
     btnRefreshClipboard.addEventListener('click', loadClipboard);
 
     btnCopyToPhone.addEventListener('click', async () => {
       if (!currentMacClipboard) {
-        showToast('Clipboard Mac trống!', '⚠️');
+        showToast(tr('toast.clipboard_empty', 'Clipboard Mac trống!'), '⚠️');
         return;
       }
       try {
         await navigator.clipboard.writeText(currentMacClipboard);
-        showToast('Đã copy vào bộ nhớ tạm!', '📋');
+        showToast(tr('toast.copied', 'Đã copy vào bộ nhớ tạm!'), '📋');
       } catch (err) {
-        showToast('Lỗi khi copy vào điện thoại', '❌');
+        showToast(tr('toast.copy_err', 'Lỗi khi copy vào điện thoại'), '❌');
       }
     });
 
@@ -406,7 +417,7 @@
       pendingFiles = Array.from(files);
       if (pendingFiles.length === 0) return;
       selectedFilesContainer.classList.remove('hidden');
-      selectedFilesCount.innerText = `Đã chọn (${pendingFiles.length} file):`;
+      selectedFilesCount.innerText = tr('upload.selected_count', `Đã chọn (${pendingFiles.length} file):`, { count: pendingFiles.length });
       selectedFilesList.innerHTML = pendingFiles.map(f => `
         <div style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; display: flex; justify-content: space-between;">
           <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">${f.name}</span>
@@ -422,7 +433,7 @@
       btnUploadFiles.addEventListener('click', async () => {
         if (pendingFiles.length === 0) return;
         btnUploadFiles.disabled = true;
-        btnUploadFiles.innerText = '⏳ Đang chuyển sang Mac...';
+        btnUploadFiles.innerText = tr('upload.uploading', '⏳ Đang chuyển sang Mac...');
 
         const formData = new FormData();
         pendingFiles.forEach(f => formData.append('files', f));
@@ -434,20 +445,20 @@
           });
           const data = await res.json();
           if (res.ok) {
-            showToast(`Đã chuyển ${pendingFiles.length} file vào Downloads Mac!`, '🎉');
+            showToast(tr('toast.upload_batch_success', `Đã chuyển ${pendingFiles.length} file vào Downloads Mac!`, { count: pendingFiles.length }), '🎉');
             pendingFiles = [];
             selectedFilesContainer.classList.add('hidden');
             if (cameraInput) cameraInput.value = '';
             if (galleryInput) galleryInput.value = '';
             loadFiles();
           } else {
-            showToast(data.error || 'Lỗi gửi file', '❌');
+            showToast(data.error || tr('toast.upload_error', 'Lỗi gửi file'), '❌');
           }
         } catch (err) {
-          showToast('Lỗi kết nối khi gửi file', '❌');
+          showToast(tr('toast.upload_error', 'Lỗi kết nối khi gửi file'), '❌');
         } finally {
           btnUploadFiles.disabled = false;
-          btnUploadFiles.innerText = '📤 Gửi ngay sang Mac (Lưu vào Downloads)';
+          btnUploadFiles.innerText = tr('upload.btn_default', '📤 Gửi ngay sang Mac (Lưu vào Downloads)');
         }
       });
     }
@@ -463,7 +474,7 @@
         allLoadedFiles = data.files || [];
         renderFiles();
       } catch (err) {
-        filesList.innerHTML = `<div style="text-align: center; color: #f87171; font-size: 13px; padding: 24px;">${typeof t === 'function' ? t('files.loading') : 'Không thể tải danh sách file.'}</div>`;
+        filesList.innerHTML = `<div style="text-align: center; color: #f87171; font-size: 13px; padding: 24px;">${tr('files.loading', 'Không thể tải danh sách file.')}</div>`;
       }
     }
 
@@ -484,11 +495,11 @@
 
       if (statsTag) {
         const totalBytes = allLoadedFiles.reduce((acc, cur) => acc + (cur.size || 0), 0);
-        statsTag.innerText = `${allLoadedFiles.length} tệp • ${formatBytes(totalBytes)}`;
+        statsTag.innerText = tr('files.stats', `${allLoadedFiles.length} tệp • ${formatBytes(totalBytes)}`, { count: allLoadedFiles.length, size: formatBytes(totalBytes) });
       }
 
       if (filtered.length === 0) {
-        filesList.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 32px;">${typeof t === 'function' ? t('files.empty') : 'Chưa có file nào'}</div>`;
+        filesList.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 32px;">${tr('files.empty', 'Chưa có file nào')}</div>`;
         return;
       }
 
@@ -500,7 +511,7 @@
           <div class="file-item">
             <div class="file-info">
               ${isImg ? `
-                <div class="file-thumb-wrap" onclick="previewImage('${encName}', '${f.direct_url}')" title="Bấm để xem ảnh lớn">
+                <div class="file-thumb-wrap" onclick="previewImage('${encName}', '${f.direct_url}')" title="${tr('files.btn_preview', 'Bấm để xem ảnh lớn')}">
                   <img src="${f.direct_url}" class="file-thumb-img" alt="${safeName}" loading="lazy" onerror="this.parentElement.innerHTML='🖼️'">
                 </div>
               ` : `
@@ -510,27 +521,27 @@
                 <div class="file-name" title="${safeName}">${safeName}</div>
                 <div class="file-meta-row">
                   <span class="file-size">${formatBytes(f.size)}</span>
-                  ${isImg ? '<span style="color: #38bdf8;">• Ảnh</span>' : ''}
+                  ${isImg ? `<span style="color: #38bdf8;">• ${tr('files.badge_image', 'Ảnh')}</span>` : ''}
                 </div>
               </div>
             </div>
             <div class="file-actions">
               ${isImg ? `
-                <button onclick="previewImage('${encName}', '${f.direct_url}')" class="btn btn-secondary btn-sm mac-only" title="Xem ảnh lớn">
-                  👁️
+                <button onclick="previewImage('${encName}', '${f.direct_url}')" class="btn btn-secondary btn-sm mac-only" title="${tr('files.btn_preview', 'Xem ảnh lớn')}">
+                  ${tr('files.btn_preview', '👁️ Xem')}
                 </button>
-                <button onclick="saveToGallery('${encName}')" class="btn btn-sm phone-only" style="background: #2563eb; color: #fff;" title="Lưu vào Cuộn ảnh / Gallery">
-                  🖼️ Album
+                <button onclick="saveToGallery('${encName}')" class="btn btn-sm phone-only" style="background: #2563eb; color: #fff;" title="${tr('files.btn_album', 'Lưu vào Album')}">
+                  ${tr('files.btn_album', '🖼️ Album')}
                 </button>
               ` : ''}
-              <button onclick="showFileQr('${encName}', '${f.direct_url}')" class="btn btn-secondary btn-sm mac-only" title="Hiện mã QR để điện thoại quét tải thẳng">
-                📱 QR
+              <button onclick="showFileQr('${encName}', '${f.direct_url}')" class="btn btn-secondary btn-sm mac-only" title="${tr('files.btn_qr', 'Hiện mã QR để điện thoại quét tải thẳng')}">
+                ${tr('files.btn_qr', '📱 QR')}
               </button>
               <a href="/api/download/${encName}" download="${safeName}" class="btn btn-primary btn-sm" style="text-decoration: none;">
-                ⬇️ Tải
+                ${tr('files.btn_download', '⬇️ Tải')}
               </a>
-              <button onclick="deleteFile('${safeName}')" class="btn btn-secondary btn-sm mac-only" style="color: #f87171;" title="Xoá file">
-                🗑️
+              <button onclick="deleteFile('${safeName}')" class="btn btn-secondary btn-sm mac-only" style="color: #f87171;" title="${tr('files.btn_delete', 'Xoá file')}">
+                ${tr('files.btn_delete', '🗑️')}
               </button>
             </div>
           </div>
@@ -622,20 +633,20 @@
 
     async function handleDesktopFilesUpload(files) {
       if (files.length === 0) return;
-      showToast(`Đang tải ${files.length} file lên QuickShare...`, '⏳');
+      showToast(tr('toast.upload_batch', `Đang tải ${files.length} file lên QuickShare...`, { count: files.length }), '⏳');
       const formData = new FormData();
       files.forEach(f => formData.append('files', f));
       try {
         const res = await apiFetch('/api/upload', { method: 'POST', body: formData });
         if (res.ok) {
-          showToast(`Đã tải lên ${files.length} file thành công!`, '🎉');
+          showToast(tr('toast.upload_batch_success', `Đã tải lên ${files.length} file thành công!`, { count: files.length }), '🎉');
           loadFiles();
         } else {
           const data = await res.json();
-          showToast(data.error || 'Lỗi tải file', '❌');
+          showToast(data.error || tr('toast.upload_error', 'Lỗi tải file'), '❌');
         }
       } catch (err) {
-        showToast('Lỗi kết nối khi tải file', '❌');
+        showToast(tr('toast.upload_error', 'Lỗi kết nối khi tải file'), '❌');
       }
     }
 
@@ -663,15 +674,18 @@
     }
 
     window.deleteFile = async function(filename) {
-      if (!confirm(`Bạn có chắc muốn xoá file "${filename}" không?`)) return;
+      const confirmMsg = tr('files.confirm_delete', `Bạn có chắc muốn xoá file "${filename}" không?`, { name: filename });
+      if (!confirm(confirmMsg)) return;
       try {
         const res = await apiFetch(`/api/files/${encodeURIComponent(filename)}`, { method: 'DELETE' });
         if (res.ok) {
-          showToast('Đã xoá file', '🗑️');
+          showToast(tr('toast.deleted', 'Đã xoá tệp thành công'), '🗑️');
           loadFiles();
+        } else {
+          showToast(tr('toast.delete_err', 'Lỗi xoá file'), '❌');
         }
       } catch (err) {
-        showToast('Lỗi xoá file', '❌');
+        showToast(tr('toast.delete_err', 'Lỗi xoá file'), '❌');
       }
     };
 
@@ -679,9 +693,9 @@
       btnOpenFolder.addEventListener('click', async () => {
         try {
           await apiFetch('/api/open-folder', { method: 'POST' });
-          showToast('Đã mở thư mục lưu trữ trên máy!', '📂');
+          showToast(tr('toast.folder_opened', 'Đã mở thư mục lưu trữ trên máy!'), '📂');
         } catch (err) {
-          showToast('Không thể mở thư mục', '❌');
+          showToast(tr('toast.folder_open_err', 'Không thể mở thư mục'), '❌');
         }
       });
     }
@@ -741,11 +755,11 @@
       btnSaveStorage.addEventListener('click', async () => {
         const newDir = inputStorageDir.value.trim();
         if (!newDir) {
-          showToast('Vui lòng nhập đường dẫn thư mục', '⚠️');
+          showToast(tr('toast.folder_enter_path', 'Vui lòng nhập đường dẫn thư mục'), '⚠️');
           return;
         }
         btnSaveStorage.disabled = true;
-        btnSaveStorage.innerText = 'Đang lưu...';
+        btnSaveStorage.innerText = tr('modal.storage_saving', 'Đang lưu...');
         try {
           const res = await apiFetch('/api/settings/storage', {
             method: 'POST',
@@ -754,7 +768,7 @@
           if (res && res.status === 'ok') {
             if (storageDirPath) storageDirPath.innerText = res.current_dir;
             if (footerStoragePath) footerStoragePath.innerText = res.current_dir;
-            showToast(`Đã đổi thư mục lưu sang: ${res.current_dir}`, '📂');
+            showToast(tr('toast.folder_changed', `Đã đổi thư mục lưu sang: ${res.current_dir}`, { dir: res.current_dir }), '📂');
             if (storageModal) storageModal.style.display = 'none';
             fetchFiles();
           }
@@ -767,7 +781,7 @@
           }
         } finally {
           btnSaveStorage.disabled = false;
-          btnSaveStorage.innerText = 'Lưu & Áp dụng';
+          btnSaveStorage.innerText = tr('modal.storage_btn_save', 'Lưu & Áp dụng');
         }
       });
     }
@@ -806,7 +820,7 @@
         const tabInstantBtn = document.querySelector('[data-tab="tab-instant-qr"]');
         if (tabInstantBtn) tabInstantBtn.click();
         if (subtabFileMode) subtabFileMode.click();
-        showToast('📸 Đã bắt ảnh chụp màn hình từ Clipboard (Cmd+V)!', '⚡');
+        showToast(tr('toast.screenshot_detected', '📸 Đã bắt ảnh chụp màn hình từ Clipboard (Cmd+V)!'), '⚡');
         processInstantFile(imageFile);
         return;
       }
@@ -820,7 +834,7 @@
           if (subtabTextMode) subtabTextMode.click();
           rawTextInput.value = pastedText;
           btnGenTextQr.click();
-          showToast('📋 Đã dán text từ Clipboard (Cmd+V) và sinh QR!', '⚡');
+          showToast(tr('toast.text_pasted_qr', '📋 Đã dán text từ Clipboard (Cmd+V) và sinh QR!'), '⚡');
         }
       }
     });
@@ -828,7 +842,7 @@
     // --- FEATURE 2: SAVE DIRECTLY TO GALLERY / CAMERA ROLL (IPHONE & SAMSUNG) ---
     window.saveToGallery = async function(encodedName) {
       const filename = decodeURIComponent(encodedName);
-      showToast('Đang xử lý ảnh để lưu vào máy...', '⏳');
+      showToast(tr('toast.photo_processing', 'Đang xử lý ảnh để lưu vào máy...'), '⏳');
 
       try {
         const res = await apiFetch(`/api/download/${encodeURIComponent(filename)}`);
@@ -840,7 +854,7 @@
             files: [file],
             title: filename,
           });
-          showToast('Đã mở bảng lưu ảnh vào Album!', '🎉');
+          showToast(tr('toast.saved_album', 'Đã mở bảng lưu ảnh vào Album!'), '🎉');
         } else {
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -850,7 +864,7 @@
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
-          showToast('Đã tải ảnh về máy thành công!', '📥');
+          showToast(tr('toast.photo_saved', 'Đã tải ảnh về máy thành công!'), '📥');
         }
       } catch (err) {
         if (err.name !== 'AbortError') {
@@ -931,13 +945,13 @@
         if (data.active) {
           showTunnelActive(data.share_link, data.pin);
           if (publicStatusText) {
-            publicStatusText.innerText = 'BẬT';
+            publicStatusText.innerText = tr('header.public_on', 'BẬT');
             publicStatusText.style.color = '#34d399';
           }
         } else {
           showTunnelInactive();
           if (publicStatusText) {
-            publicStatusText.innerText = 'TẮT';
+            publicStatusText.innerText = tr('header.public_off', 'TẮT');
             publicStatusText.style.color = '#94a3b8';
           }
         }
@@ -980,10 +994,10 @@
           if (data.status === 'ok') {
             showTunnelActive(data.share_link, data.pin);
             if (publicStatusText) {
-              publicStatusText.innerText = 'BẬT';
+              publicStatusText.innerText = tr('header.public_on', 'BẬT');
               publicStatusText.style.color = '#34d399';
             }
-            showToast('Đã tạo Public Share Link thành công!', '🌐');
+            showToast(tr('toast.public_started', 'Đã tạo Public Share Link thành công!'), '🌐');
           } else {
             showToast(data.error || 'Không thể tạo tunnel', '❌');
             showTunnelInactive();
@@ -1001,10 +1015,10 @@
           await fetch('/api/tunnel/stop', { method: 'POST' });
           showTunnelInactive();
           if (publicStatusText) {
-            publicStatusText.innerText = 'TẮT';
+            publicStatusText.innerText = tr('header.public_off', 'TẮT');
             publicStatusText.style.color = '#94a3b8';
           }
-          showToast('Đã tắt Public Share an toàn!', '🛑');
+          showToast(tr('toast.public_stopped', 'Đã tắt Public Share an toàn!'), '🛑');
         } catch (err) {
           showToast('Không thể dừng tunnel', '❌');
         }
@@ -1015,7 +1029,7 @@
       btnCopyPublicLink.addEventListener('click', () => {
         const link = publicShareLink.innerText;
         navigator.clipboard.writeText(link);
-        showToast('Đã copy link kèm mã PIN!', '📋');
+        showToast(tr('modal.public_btn_copy', 'Đã copy link kèm mã PIN!'), '📋');
       });
     }
 
@@ -1024,7 +1038,7 @@
       btnSubmitPin.addEventListener('click', async () => {
         const pin = visitorPinInput.value.trim();
         if (pin.length !== 4) {
-          showToast('Mã PIN gồm 4 số!', '⚠️');
+          showToast(tr('toast.pin_length', 'Mã PIN gồm 4 số!'), '⚠️');
           return;
         }
         btnSubmitPin.disabled = true;
@@ -1038,12 +1052,12 @@
             currentPin = pin;
             sessionStorage.setItem('quickshare_pin', pin);
             pinPromptModal.classList.remove('active');
-            showToast('Mở khóa thành công!', '🎉');
+            showToast(tr('toast.pin_unlocked', 'Mở khóa thành công!'), '🎉');
             loadInfo();
             loadClipboard();
             loadFiles();
           } else {
-            showToast('Mã PIN không chính xác!', '❌');
+            showToast(tr('toast.pin_incorrect', 'Mã PIN không chính xác!'), '❌');
           }
         } catch (err) {
           showToast('Lỗi kiểm tra mã PIN', '❌');
