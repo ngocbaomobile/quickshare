@@ -54,9 +54,18 @@ flowchart LR
 
 ---
 
-## ⚡ 1-Step Quick Install (For Everyone)
+## ⚡ 1-Step Quick Launch & Install
 
-### 🍏 macOS (Terminal)
+### 🚀 Instant Run (Zero Setup — macOS, Windows, Linux)
+If you have Node.js installed, run this single command to start immediately:
+```bash
+npx @ngocbaongo/quickshare
+```
+*Zero installation, zero cloning. Automatically launches the server and opens your browser.*
+
+---
+
+### 🍏 macOS Automated Setup (Creates Desktop Shortcut)
 Copy and paste this single command into Terminal:
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ngocbaomobile/quickshare/main/install.sh | bash
