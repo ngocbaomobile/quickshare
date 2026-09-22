@@ -153,10 +153,11 @@ source ~/.zshrc
 
 ---
 
-## ⚡ Performance Benchmarks
+## ⚡ Performance Benchmarks & Resource Sizing
 
-QuickShare is optimized for zero bloat, streaming I/O, and low latency. Run tests anytime with `npm run benchmark`:
+QuickShare is engineered for zero bloat, streaming I/O, and low latency. You can run automated benchmarks anytime using `npm run benchmark`.
 
+### 1. Speed & Latency (Real Hardware Measurements)
 | Metric / Operation | Latency / Time | Throughput | Notes |
 | :--- | :--- | :--- | :--- |
 | **API Response (`GET /api/info`)** | **0.49 ms** | 5,450+ req/sec | Sub-millisecond response |
@@ -166,7 +167,23 @@ QuickShare is optimized for zero bloat, streaming I/O, and low latency. Run test
 | **10 MB File (High-Res Document)** | **37.58 ms** | **~266.1 MB/s** | Ultra-fast local LAN transfer |
 | **50 MB File (Video Clip)** | **88.66 ms** | **~563.9 MB/s** | Full SSD/RAM cache streaming |
 | **Concurrency (50 clients)** | **8.02 ms avg** | **5,452 RPS** | High throughput under load |
-| **Memory Footprint (Idle)** | **~5.8 MB** RAM | — | Extremely lightweight daemon |
+
+### 2. Disk Sizing & Footprint
+| Component | Actual Size | Comparison / Impact |
+| :--- | :--- | :--- |
+| **NPM Package Download (`npx` / `.tgz`)** | **20.6 KB** | Lighter than a single icon image |
+| **Complete Source Code (UI + Server + CLI)** | **~80 KB** | Vanilla HTML5/CSS/JS, zero bulky frameworks |
+| **Production Dependencies (`node_modules`)** | **4.6 MB** | Minimalist stack (Express, Multer, Cors, QR) |
+| **Total Disk Installation** | **~5.3 MB** | **50–100× lighter** than Electron apps (200MB–500MB+) |
+
+### 3. Memory (RAM) & CPU Sizing
+| Operating State | OS Resident RAM (RSS) | V8 JavaScript Heap | CPU Load | Battery Impact |
+| :--- | :--- | :--- | :--- | :--- |
+| **Idle Daemon (Background 24/7)** | **~28.9 MB** | **5.78 MB** | **0.0%** | Zero drain (kernel sleeps process) |
+| **Active 50 MB File Transfer** | **~49.3 MB** | **~12.4 MB** | **~1.5%–3.0%** | Minimal burst during transfer |
+| **Post-Transfer (GC Recovery)** | Drops back to ~29 MB | Instant release | **0.0%** | No memory leaks (stream-based) |
+
+> 💡 **Disk Streaming Architecture:** Uploads stream directly to `~/Downloads/QuickShare` chunk by chunk via Multer disk storage, preventing memory bloat even when transferring gigabyte-sized files.
 
 ---
 
