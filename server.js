@@ -95,6 +95,7 @@ function startCloudflareTunnel() {
     return Promise.resolve({ public_url: publicUrl, pin: publicPin });
   }
 
+  // Generate random 4-digit PIN for access control
   publicPin = Math.floor(1000 + Math.random() * 9000).toString();
 
   return new Promise((resolve, reject) => {
@@ -108,7 +109,7 @@ function startCloudflareTunnel() {
     const timeout = setTimeout(() => {
       if (!resolved) {
         resolved = true;
-        resolve({ public_url: null, pin: publicPin, error: 'Hết thời gian khởi tạo tunnel' });
+        resolve({ public_url: null, pin: publicPin, error: 'Tunnel initialization timed out' });
       }
     }, 15000);
 
@@ -120,11 +121,11 @@ function startCloudflareTunnel() {
         clearTimeout(timeout);
         publicUrl = match[0];
         console.log('\n======================================================');
-        console.log('🌐 PUBLIC CLOUDFLARE TUNNEL ĐÃ BẬT!');
+        console.log('🌐 PUBLIC CLOUDFLARE TUNNEL ACTIVE!');
         console.log('======================================================');
-        console.log(`🔗 Link Public: \x1b[36m${publicUrl}?pin=${publicPin}\x1b[0m`);
-        console.log(`🔑 Mã PIN:      \x1b[33m${publicPin}\x1b[0m\n`);
-        notifyMac('Quick Share Public', `Link đã tạo: ${publicUrl} (PIN: ${publicPin})`);
+        console.log(`🔗 Public Link: \x1b[36m${publicUrl}?pin=${publicPin}\x1b[0m`);
+        console.log(`🔑 PIN Code:    \x1b[33m${publicPin}\x1b[0m\n`);
+        notifyMac('Quick Share Public', `Public Link Active: ${publicUrl} (PIN: ${publicPin})`);
         resolve({ public_url: publicUrl, pin: publicPin });
       }
     };
@@ -146,8 +147,8 @@ function stopCloudflareTunnel() {
     tunnelProcess = null;
     publicUrl = null;
     publicPin = null;
-    console.log('\n🛑 Public Cloudflare Tunnel đã TẮT.\n');
-    notifyMac('Quick Share', 'Đã đóng Public Tunnel');
+    console.log('\n🛑 Public Cloudflare Tunnel stopped.\n');
+    notifyMac('Quick Share', 'Public Tunnel Closed');
     return true;
   }
   return false;
@@ -161,12 +162,12 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Public Access Security Guard
 app.use((req, res, next) => {
   if (isPublicRequest(req)) {
-    // Block dangerous admin endpoints for public users
+    // Block administrative endpoints for public users
     if (req.path.startsWith('/api/tunnel/') && req.path !== '/api/tunnel/verify-pin') {
-      return res.status(403).json({ error: 'Không được phép thực hiện từ mạng công cộng' });
+      return res.status(403).json({ error: 'Action not allowed on public connection' });
     }
     if (req.path === '/api/open-folder' || (req.method === 'DELETE' && req.path.startsWith('/api/files/'))) {
-      return res.status(403).json({ error: 'Chức năng bị khóa trên liên kết công cộng' });
+      return res.status(403).json({ error: 'Feature disabled on public connection' });
     }
 
     // Check PIN for data access APIs
@@ -175,7 +176,7 @@ app.use((req, res, next) => {
     
     if (!isStaticAsset && req.path.startsWith('/api/') && req.path !== '/api/info' && req.path !== '/api/tunnel/verify-pin') {
       if (!publicPin || pin !== publicPin) {
-        return res.status(401).json({ error: 'Cần mã PIN để truy cập', require_pin: true });
+        return res.status(401).json({ error: 'PIN required for access', require_pin: true });
       }
     }
   }
@@ -217,7 +218,7 @@ app.get('/api/info', (req, res) => {
     is_public: isPublic,
     public_active: !!publicUrl,
     public_url: publicUrl,
-    public_pin: isPublic ? null : publicPin, // don't expose pin to public caller
+    public_pin: isPublic ? null : publicPin,
   });
 });
 
@@ -227,7 +228,7 @@ app.post('/api/tunnel/verify-pin', (req, res) => {
   if (publicPin && pin === publicPin) {
     res.json({ status: 'ok', valid: true });
   } else {
-    res.status(401).json({ status: 'error', valid: false, error: 'Mã PIN không chính xác' });
+    res.status(401).json({ status: 'error', valid: false, error: 'Invalid PIN code' });
   }
 });
 
@@ -243,7 +244,7 @@ app.post('/api/tunnel/start', async (req, res) => {
         share_link: `${result.public_url}?pin=${result.pin}`,
       });
     } else {
-      res.status(500).json({ error: result.error || 'Không tạo được tunnel' });
+      res.status(500).json({ error: result.error || 'Failed to start tunnel' });
     }
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -276,20 +277,20 @@ app.get('/api/clipboard', (req, res) => {
 app.post('/api/clipboard', (req, res) => {
   const text = req.body.text || '';
   if (!text) {
-    return res.status(400).json({ error: 'Nội dung text trống' });
+    return res.status(400).json({ error: 'Text content is empty' });
   }
   setMacClipboard(text);
   
   textHistory.unshift({
     id: Date.now().toString(),
     text,
-    created_at: new Date().toLocaleTimeString('vi-VN'),
+    created_at: new Date().toLocaleTimeString('en-US'),
   });
   if (textHistory.length > 20) textHistory.pop();
 
   const preview = text.length > 40 ? text.slice(0, 40) + '...' : text;
-  const source = isPublicRequest(req) ? 'Internet' : 'Mạng nội bộ';
-  notifyMac('Quick Share', `[${source}] Nhận text: "${preview}"`);
+  const source = isPublicRequest(req) ? 'Internet' : 'Local Wi-Fi';
+  notifyMac('Quick Share', `[${source}] Received text: "${preview}"`);
   res.json({ status: 'ok', length: text.length });
 });
 
@@ -301,11 +302,11 @@ app.get('/api/history', (req, res) => {
 // API: Upload Files / Images
 app.post('/api/upload', upload.array('files'), (req, res) => {
   if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ error: 'Không có file nào được gửi' });
+    return res.status(400).json({ error: 'No files provided' });
   }
   const fileNames = req.files.map((f) => f.filename);
-  const source = isPublicRequest(req) ? 'Internet' : 'Wi-Fi';
-  const msg = req.files.length === 1 ? `[${source}] Nhận: ${fileNames[0]}` : `[${source}] Nhận ${req.files.length} tệp tin`;
+  const source = isPublicRequest(req) ? 'Internet' : 'Local Wi-Fi';
+  const msg = req.files.length === 1 ? `[${source}] Received: ${fileNames[0]}` : `[${source}] Received ${req.files.length} files`;
   notifyMac('Quick Share', msg);
   res.json({ status: 'ok', files: fileNames });
 });
@@ -313,7 +314,7 @@ app.post('/api/upload', upload.array('files'), (req, res) => {
 // API: Quick QR Single File Upload
 app.post('/api/quick-qr-file', upload.single('file'), (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: 'Không có file nào được chọn' });
+    return res.status(400).json({ error: 'No file selected' });
   }
   const ip = getLocalIp();
   const baseUrl = publicUrl || `http://${ip}:${PORT}`;
@@ -352,7 +353,7 @@ app.get('/api/files', (req, res) => {
       .sort((a, b) => b.mtime - a.mtime);
     res.json({ files: list });
   } catch (err) {
-    res.status(500).json({ error: 'Không thể đọc thư mục downloads' });
+    res.status(500).json({ error: 'Cannot read downloads directory' });
   }
 });
 
@@ -361,7 +362,7 @@ app.get('/api/direct-download/:filename', (req, res) => {
   const filename = path.basename(req.params.filename);
   const filePath = path.join(DOWNLOADS_DIR, filename);
   if (!fs.existsSync(filePath)) {
-    return res.status(404).send('File không tồn tại trên Mac');
+    return res.status(404).send('File not found');
   }
 
   res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
@@ -379,7 +380,7 @@ app.get('/api/download/:filename', (req, res) => {
   if (fs.existsSync(filePath)) {
     res.download(filePath, filename);
   } else {
-    res.status(404).send('File không tồn tại');
+    res.status(404).send('File not found');
   }
 });
 
@@ -391,7 +392,7 @@ app.delete('/api/files/:filename', (req, res) => {
     fs.unlinkSync(filePath);
     res.json({ status: 'ok' });
   } else {
-    res.status(404).json({ error: 'File không tồn tại' });
+    res.status(404).json({ error: 'File not found' });
   }
 });
 
@@ -401,7 +402,7 @@ app.post('/api/open-folder', (req, res) => {
     spawn('open', [DOWNLOADS_DIR]);
     res.json({ status: 'ok' });
   } else {
-    res.status(400).json({ error: 'Chỉ hỗ trợ macOS' });
+    res.status(400).json({ error: 'macOS only' });
   }
 });
 
@@ -411,12 +412,12 @@ app.listen(PORT, '0.0.0.0', () => {
   const url = `http://${ip}:${PORT}`;
 
   console.log('\n======================================================');
-  console.log('🚀 QUICK SHARE ĐANG CHẠY TRONG MẠNG WI-FI NỘI BỘ');
+  console.log('🚀 QUICKSHARE RUNNING ON LOCAL NETWORK');
   console.log('======================================================');
-  console.log(`📡 URL nội bộ:    \x1b[36m${url}\x1b[0m`);
-  console.log(`💻 Mở trên Mac:    \x1b[32mhttp://localhost:${PORT}\x1b[0m`);
-  console.log(`📂 Thư mục lưu:   \x1b[33m${DOWNLOADS_DIR}\x1b[0m\n`);
-  console.log('📱 Quét mã QR dưới đây bằng Camera iPhone hoặc Samsung:');
+  console.log(`📡 Local URL:      \x1b[36m${url}\x1b[0m`);
+  console.log(`💻 Open on Mac:    \x1b[32mhttp://localhost:${PORT}\x1b[0m`);
+  console.log(`📂 Downloads Dir:  \x1b[33m${DOWNLOADS_DIR}\x1b[0m\n`);
+  console.log('📱 Scan QR code below with iPhone or Samsung Camera:');
   console.log('------------------------------------------------------');
   qrcode.generate(url, { small: true });
   console.log('------------------------------------------------------\n');

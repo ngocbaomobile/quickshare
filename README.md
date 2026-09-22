@@ -1,39 +1,57 @@
 # ⚡ QuickShare — Mac ↔ iPhone | Samsung (LAN & Public Transfer)
 
-Công cụ truyền Text (Clipboard) và Hình ảnh / Tệp tin hai chiều giữa máy **Mac**, **iPhone** và **Samsung (Android)** qua mạng Wi-Fi nội bộ hoặc qua Internet công cộng.
-
-**Đặc điểm nổi bật:**
-- 🚫 **Không cần cài app** trên iPhone hay Samsung (chỉ cần mở trình duyệt hoặc Camera).
-- 🔒 **Mạng nội bộ 100%:** Dữ liệu truyền trực tiếp trong mạng Wi-Fi LAN với tốc độ tối đa.
-- 🌐 **Public Share (Cloudflare Tunnel):** Chia sẻ ra ngoài Internet an toàn (cho người dùng 4G/5G hoặc ở nơi khác) có kèm **Mã PIN bảo mật 4 số**.
-- 🛡️ **Bảo mật truy cập ngoài:** Khóa hoàn toàn các thao tác xóa file và can thiệp hệ thống máy Mac từ liên kết công cộng.
-- 🎯 **Device-Aware UI:** Tự động nhận diện giao diện Mac vs Mobile để ẩn các chức năng thừa.
-- 📸 **Mã QR Tải Ngay (Direct Download QR):** Điện thoại quét Camera chạm vào link là tự động tải tệp/ảnh vào máy mà không qua web trung gian.
-- 🔤 **Mã QR Text thô:** Camera iPhone / Samsung tự nhận diện văn bản và hiện nút "Sao chép" (Copy) trực tiếp mà không cần mạng.
-- ⌨️ **Cmd + V Siêu Tốc trên Mac:** Vừa chụp màn hình (`Cmd + Ctrl + Shift + 4`), bấm `Cmd + V` trên web là sinh mã QR tải ngay trong 0.5s.
-- 🖼️ **Nút Album cho Mobile:** Lưu thẳng ảnh vào **Cuộn ảnh (iOS Photos)** hoặc **Bộ sưu tập (Samsung Gallery)** qua Web Share API.
-- 💻 **Terminal CLI:** Bật / tắt tiện lợi qua lệnh `quickshare-on`, `quickshare-off`, `quickshare-public`.
+> Seamless, bi-directional text (clipboard) and file/photo transfer between **macOS**, **iOS (iPhone)**, and **Android (Samsung)** with zero mobile app installation. Works over local Wi-Fi and global Internet via Cloudflare Tunnel.
 
 ---
 
-## 🚀 Cài đặt & Khởi động
+## ✨ Key Features
 
-### 1. Cài đặt dependencies:
+- 🚫 **Zero App Installation:** No app needed on iPhone or Samsung. Works directly with native Cameras and mobile browsers (Safari, Chrome, Samsung Internet).
+- 🔒 **100% Local LAN Speed:** Direct peer-to-peer transfer inside your Wi-Fi network at maximum local speeds. Zero internet bandwidth consumed.
+- 🌐 **Instant Public Sharing (Cloudflare Tunnel):** Share files with anyone on 4G/5G or outside networks via an encrypted, public HTTPS link protected by a **4-digit PIN**.
+- 🛡️ **Role-Based Security for Public Visitors:** Remote guests are strictly limited to downloading shared files and viewing text. Destructive actions (file deletion, local Finder operations) are blocked.
+- 🎯 **Device-Aware UI:** Automatically detects whether the client is a Mac or a smartphone, displaying a clean, tailored interface with zero redundant buttons.
+- 📸 **Direct Download QR:** Mobile camera scans the QR code and triggers an immediate native download prompt with `Content-Disposition: attachment`.
+- 🔤 **Raw Text QR (Zero-Network Copy):** Generates native raw text QR codes. iPhone and Samsung cameras detect the text and provide a 1-tap "Copy Text" button right on the camera screen without launching a browser.
+- ⌨️ **Cmd + V Instant Paste on Mac:** Take a screenshot (`Cmd + Ctrl + Shift + 4`) and press `Cmd + V` anywhere on the web page to instantly upload and generate a Direct Download QR code in under 0.5s.
+- 🖼️ **Save to Camera Roll / Gallery:** Includes a 1-tap "Save to Album" button on mobile leveraging the Web Share API to save directly to iOS Photos or Samsung Gallery.
+- 💻 **Dedicated macOS CLI:** Quick control directly from Terminal via `quickshare-on`, `quickshare-off`, and `quickshare-public`.
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+- **Node.js** (v18 or higher recommended)
+- **macOS** (for native `pbcopy`/`pbpaste` integration)
+- **cloudflared** (optional, required only for public internet tunnels):
+  ```bash
+  brew install cloudflared
+  ```
+
+### 2. Installation
+Clone the repository and install dependencies:
 ```bash
+git clone https://github.com/ngocbaomobile/quickshare.git
+cd quickshare
 npm install
-# Cài đặt cloudflared (nếu muốn dùng tính năng Public Share ra ngoài mạng)
-brew install cloudflared
 ```
 
-### 2. Chạy server:
+### 3. Run the Server
 ```bash
+# Start standard server
 npm start
-# Hoặc chạy script:
+
+# Or run the background launcher
 ./start.sh
 ```
 
-### 3. Điều khiển nhanh từ Terminal (macOS):
-Thêm vào `~/.zshrc`:
+---
+
+## 💻 Terminal CLI Setup (macOS)
+
+Add the following aliases to your `~/.zshrc` (or `~/.bashrc`):
+
 ```bash
 alias quickshare-on="quickshare on"
 alias quickshare-off="quickshare off"
@@ -41,22 +59,37 @@ alias quickshare="quickshare status"
 alias quickshare-public="quickshare-public"
 ```
 
-**Các lệnh sử dụng:**
-- `quickshare-on`: Khởi động chạy nền, in mã QR và URL mạng Wi-Fi nội bộ.
-- `quickshare-off`: Tắt server nhanh chóng.
-- `quickshare-public`: Mở đường hầm HTTPS Cloudflare công khai ra ngoài Internet (kèm mã PIN 4 số).
-- `quickshare public off`: Đóng đường hầm công khai.
-- `quickshare`: Xem trạng thái và IP hiện tại.
+Then reload your shell:
+```bash
+source ~/.zshrc
+```
+
+### CLI Usage:
+| Command | Description |
+| :--- | :--- |
+| `quickshare-on` | Launches the server in background and displays local IP, web link, and Terminal QR code |
+| `quickshare-off` | Gracefully stops the server and frees port `5050` |
+| `quickshare-public` | Starts a secure Cloudflare Tunnel, generates a random 4-digit PIN, and prints the public link & QR |
+| `quickshare public off` | Closes the public tunnel while keeping local LAN active |
+| `quickshare` | Shows current operational status and connection URLs |
 
 ---
 
-## 📂 Vị trí lưu tệp
-Mặc định mọi ảnh và tệp nhận từ điện thoại sẽ được lưu vào:
-`~/Downloads/QuickShare` trên máy Mac.
+## 📂 File Storage
+By default, all uploaded photos and files sent from mobile devices are saved directly to:
+```
+~/Downloads/QuickShare
+```
+The Mac web interface includes a **Finder** button to open this directory instantly in macOS Finder.
 
 ---
 
-## 🛠️ Công nghệ sử dụng
-- **Backend:** Node.js, Express, Multer, qrcode-terminal, Cloudflare Tunnel (`cloudflared`)
-- **Frontend:** Vanilla HTML5 / Modern CSS (Glassmorphism & Dark Mode) / JavaScript (Clipboard API, Web Share API, Drag & Drop HTML5)
-- **Tương thích:** macOS, iOS (Safari), Android (Samsung Internet, Chrome)
+## 🛠️ Technology Stack
+- **Backend:** Node.js, Express, Multer, `qrcode-terminal`, Cloudflare Tunnel (`cloudflared`)
+- **Frontend:** Vanilla HTML5, Modern CSS (Glassmorphism & Dark Mode), Modern JavaScript (Clipboard API, Web Share API, HTML5 Drag & Drop)
+- **Supported Platforms:** macOS, iOS (Safari), Android (Samsung Internet, Google Chrome)
+
+---
+
+## 📄 License
+MIT License. Free to use, modify, and distribute.

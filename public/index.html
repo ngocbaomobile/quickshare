@@ -565,7 +565,7 @@
       </button>
     </div>
 
-    <!-- TAB 1: INSTANT QR (MAC ONLY - DÙNG CHO MÁY MAC ĐỂ SINH MÃ CHO ĐIỆN THOẠI QUÉT) -->
+    <!-- TAB 1: INSTANT QR (MAC ONLY - GENERATES DIRECT DOWNLOAD QR FOR MOBILE) -->
     <div id="tab-instant-qr" class="tab-content mac-only">
       <div class="card">
         <div class="card-header">
@@ -630,7 +630,7 @@
       </div>
     </div>
 
-    <!-- TAB 2: TEXT SYNC (MAC & PHONE ĐỀU DÙNG) -->
+    <!-- TAB 2: TEXT SYNC (BI-DIRECTIONAL CLIPBOARD) -->
     <div id="tab-text" class="tab-content hidden">
       <!-- Box 1: Send text to Mac -->
       <div class="card">
@@ -664,7 +664,7 @@
       </div>
     </div>
 
-    <!-- TAB 3: MEDIA (PHONE ONLY - CHỤP ẢNH & CHỌN TỪ BỘ SƯU TẬP GỬI SANG MAC) -->
+    <!-- TAB 3: MEDIA (PHONE ONLY - CAMERA & GALLERY UPLOAD TO MAC) -->
     <div id="tab-media" class="tab-content hidden phone-only">
       <div class="card">
         <div class="card-header">
@@ -697,7 +697,7 @@
       </div>
     </div>
 
-    <!-- TAB 4: FILES LIST (MAC & PHONE) -->
+    <!-- TAB 4: FILES LIST (SHARED FILES & DOWNLOADS) -->
     <div id="tab-files" class="tab-content hidden">
       <div class="card">
         <div class="card-header">
@@ -929,7 +929,7 @@
       if (defaultBtn) defaultBtn.click();
     }
 
-    // Subtab File vs Text inside Instant QR
+    // Subtab: File vs Text inside Instant QR
     if (subtabFileMode && subtabTextMode) {
       subtabFileMode.addEventListener('click', () => {
         subtabFileMode.classList.add('active');
@@ -946,7 +946,7 @@
       });
     }
 
-    // System Info
+    // Fetch system info and local IP
     async function loadInfo() {
       try {
         const res = await apiFetch('/api/info');
@@ -982,7 +982,7 @@
       });
     }
 
-    // --- INSTANT QR (MAC ONLY) ---
+    // --- INSTANT QR GENERATION (MAC ONLY) ---
     async function processInstantFile(file) {
       if (!file) return;
       const formData = new FormData();
@@ -1059,7 +1059,7 @@
       }, false);
     }
 
-    // Global drag & drop catcher for Mac desktop
+    // Global drag & drop handler for Mac desktop
     window.addEventListener('dragover', (e) => e.preventDefault(), false);
     window.addEventListener('drop', (e) => {
       e.preventDefault();
@@ -1074,7 +1074,7 @@
       }
     }, false);
 
-    // Text QR Generation
+    // Raw text QR code generation
     if (btnGenTextQr) {
       btnGenTextQr.addEventListener('click', () => {
         const text = rawTextInput.value.trim();
@@ -1114,7 +1114,7 @@
       });
     }
 
-    // --- TAB: TEXT SYNC ---
+    // --- TAB: TEXT & CLIPBOARD SYNC ---
     btnSendText.addEventListener('click', async () => {
       const text = textInput.value.trim();
       if (!text) {
@@ -1185,7 +1185,7 @@
       }
     });
 
-    // --- TAB: MEDIA (PHONE) ---
+    // --- TAB: MEDIA UPLOADS (PHONE) ---
     function handleSelectedFiles(files) {
       pendingFiles = Array.from(files);
       if (pendingFiles.length === 0) return;
@@ -1236,7 +1236,7 @@
       });
     }
 
-    // --- TAB: FILES LIST ---
+    // --- TAB: FILES & DOWNLOADS LIST ---
     async function loadFiles() {
       try {
         const res = await apiFetch('/api/files');
@@ -1280,7 +1280,7 @@
     }
     btnRefreshFiles.addEventListener('click', loadFiles);
 
-    // Show File QR Modal (Mac only)
+    // Show dedicated file download QR modal (Mac only)
     window.showFileQr = function(filename, directUrl) {
       if (!singleFileModal) return;
       modalFileTitle.innerText = decodeURIComponent(filename);
