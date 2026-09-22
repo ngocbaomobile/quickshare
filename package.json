@@ -1,15 +1,43 @@
 {
-  "name": "local-quick-share",
+  "name": "quickshare-cli",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node server.js"
+  "description": "Bi-directional clipboard and file transfer between macOS, Windows, iOS, and Android over local Wi-Fi and Cloudflare Tunnel.",
+  "main": "server.js",
+  "bin": {
+    "quickshare": "./bin/cli.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "daemon": "node daemon.js",
+    "stop": "kill -9 $(lsof -t -i :5050) 2>/dev/null || true"
+  },
+  "keywords": [
+    "quickshare",
+    "airdrop",
+    "file-transfer",
+    "clipboard-sync",
+    "cross-platform",
+    "macos",
+    "windows",
+    "ios",
+    "android"
+  ],
+  "author": "ngocbaomobile",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ngocbaomobile/quickshare.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ngocbaomobile/quickshare/issues"
+  },
+  "homepage": "https://github.com/ngocbaomobile/quickshare#readme",
+  "files": [
+    "bin",
+    "public",
+    "server.js",
+    "daemon.js"
+  ],
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1",
