@@ -1,7 +1,15 @@
 // ==============================================================================
-// 🌐 QuickShare Internationalization (i18n) Module
-// Supported: Vietnamese (vi), English (en)
+// 🌐 QuickShare Extensible Internationalization (i18n) Engine
+// Supports dynamic multi-language registration, fallbacks & parameter injection.
 // ==============================================================================
+
+const SUPPORTED_LANGUAGES = {
+  vi: { code: 'vi', name: 'Tiếng Việt', flag: '🇻🇳' },
+  en: { code: 'en', name: 'English', flag: '🇺🇸' },
+  ja: { code: 'ja', name: '日本語', flag: '🇯🇵' },
+  zh: { code: 'zh', name: '中文', flag: '🇨🇳' },
+  ko: { code: 'ko', name: '한국어', flag: '🇰🇷' },
+};
 
 const translations = {
   vi: {
@@ -220,38 +228,187 @@ const translations = {
     'toast.saved_album': 'Opened save to photo album sheet!',
     'toast.public_started': 'Public sharing link activated!',
     'toast.public_stopped': 'Public sharing stopped!',
-  }
+  },
+
+  ja: {
+    'brand.title': 'Quick Share',
+    'header.connecting': 'Wi-Fi接続中...',
+    'header.connect_phone': '📱 スマホ接続',
+    'header.public_share': '🌐 公開共有',
+    'header.online': 'オンライン',
+    'tab.instant_qr': '即時QR',
+    'tab.sync_text': 'テキスト共有',
+    'tab.send_files': 'ファイル送信',
+    'tab.shared_files': '共有ファイル',
+    'tab.files_from_mac': 'PCからのファイル',
+    'qr.title': '直接ダウンロードQRコード',
+    'qr.subtitle': 'iPhone / Androidカメラでスキャンするだけで即時ダウンロード。',
+    'qr.subtab_file': '📁 ファイル / 写真',
+    'qr.subtab_text': '🔤 テキスト',
+    'qr.dropzone_text': 'ファイルをドロップまたはクリックして選択',
+    'qr.dropzone_sub': '写真、動画、書類、Zip対応 (最大500MB)',
+    'qr.or_paste': 'または画面をキャプチャして <b>Cmd + V</b> で即時QR生成！',
+    'qr.scan_hint': '📱 スマホのカメラで読み取ると即ダウンロードされます',
+    'qr.text_placeholder': '送信するテキストを入力...',
+    'qr.btn_gen_text': 'テキストQRを生成',
+    'qr.btn_paste_mac': '📋 クリップボード貼り付け',
+    'text.card_title_phone': '✍️ PCへテキスト送信',
+    'text.card_title_mac': '✍️ テキストを配信',
+    'text.placeholder': 'テキストを入力または貼り付け...',
+    'text.btn_send': '🚀 PCへ送信',
+    'text.mac_clip_title': '📋 PCのクリップボード',
+    'files.title_mac': '📂 共有ファイル一覧',
+    'files.storage_label': '保存先:',
+    'files.btn_change_folder': '⚙️ フォルダ変更',
+    'files.btn_open_folder': '📁 フォルダを開く',
+    'files.empty': 'ファイルはありません',
+    'files.btn_download': '⬇️ 保存',
+    'modal.storage_title': '保存先フォルダ設定',
+    'modal.storage_btn_save': '保存して適用',
+    'toast.copied': 'クリップボードにコピーしました！',
+  },
+
+  zh: {
+    'brand.title': 'Quick Share',
+    'header.connecting': 'Wi-Fi 连接中...',
+    'header.connect_phone': '📱 连接手机',
+    'header.public_share': '🌐 公网分享',
+    'header.online': '在线',
+    'tab.instant_qr': '即时二维码',
+    'tab.sync_text': '剪贴板同步',
+    'tab.send_files': '发送文件/照片',
+    'tab.shared_files': '共享文件',
+    'tab.files_from_mac': '来自电脑的文件',
+    'qr.title': '直链下载二维码',
+    'qr.subtitle': '用手机相机扫描即可直接下载文件，无需打开网页。',
+    'qr.subtab_file': '📁 文件 / 图片',
+    'qr.subtab_text': '🔤 纯文本',
+    'qr.dropzone_text': '拖放文件或点击选择',
+    'qr.dropzone_sub': '支持图片、视频、文档、Zip等（最大500MB）',
+    'qr.or_paste': '截屏后按 <b>Cmd + V</b> 即可瞬间生成二维码！',
+    'qr.scan_hint': '📱 手机相机扫码即可立即下载',
+    'qr.text_placeholder': '输入要发送到手机的文本...',
+    'qr.btn_gen_text': '生成文本二维码',
+    'qr.btn_paste_mac': '📋 粘贴剪贴板',
+    'text.card_title_phone': '✍️ 发送文字到电脑',
+    'text.card_title_mac': '✍️ 广播文字',
+    'text.placeholder': '在此输入或粘贴文字...',
+    'text.btn_send': '🚀 发送到电脑',
+    'text.mac_clip_title': '📋 电脑当前剪贴板',
+    'files.title_mac': '📂 共享文件列表',
+    'files.storage_label': '存储路径:',
+    'files.btn_change_folder': '⚙️ 更改目录',
+    'files.btn_open_folder': '📁 打开目录',
+    'files.empty': '暂无文件',
+    'files.btn_download': '⬇️ 下载',
+    'modal.storage_title': '存储目录设置',
+    'modal.storage_btn_save': '保存并应用',
+    'toast.copied': '已复制到剪贴板！',
+  },
+
+  ko: {
+    'brand.title': 'Quick Share',
+    'header.connecting': 'Wi-Fi 연결 중...',
+    'header.connect_phone': '📱 스마트폰 연결',
+    'header.public_share': '🌐 원격 공유',
+    'header.online': '온라인',
+    'tab.instant_qr': '즉시 QR',
+    'tab.sync_text': '클립보드 동기화',
+    'tab.send_files': '파일 전송',
+    'tab.shared_files': '공유 파일',
+    'tab.files_from_mac': 'PC에서 받은 파일',
+    'qr.title': '직접 다운로드 QR 코드',
+    'qr.subtitle': '스마트폰 카메라로 스캔하면 웹 접속 없이 즉시 파일이 다운로드됩니다.',
+    'qr.subtab_file': '📁 파일 / 사진',
+    'qr.subtab_text': '🔤 일반 텍스트',
+    'qr.dropzone_text': '파일을 드래그하거나 클릭하여 선택하세요',
+    'qr.dropzone_sub': '사진, 동영상, 문서, Zip 지원 (최대 500MB)',
+    'qr.or_paste': '스크린샷 후 <b>Cmd + V</b>를 누르면 즉시 QR 코드가 생성됩니다!',
+    'qr.scan_hint': '📱 카메라로 QR 코드를 스캔하세요',
+    'qr.text_placeholder': '스마트폰으로 보낼 텍스트 입력...',
+    'qr.btn_gen_text': '텍스트 QR 생성',
+    'qr.btn_paste_mac': '📋 클립보드 붙여넣기',
+    'text.card_title_phone': '✍️ PC로 텍스트 보내기',
+    'text.card_title_mac': '✍️ 텍스트 브로드캐스트',
+    'text.placeholder': '텍스트를 입력하거나 붙여넣으세요...',
+    'text.btn_send': '🚀 PC로 전송',
+    'text.mac_clip_title': '📋 PC의 현재 클립보드',
+    'files.title_mac': '📂 공유 파일 목록',
+    'files.storage_label': '저장 위치:',
+    'files.btn_change_folder': '⚙️ 폴더 변경',
+    'files.btn_open_folder': '📁 폴더 열기',
+    'files.empty': '저장된 파일이 없습니다',
+    'files.btn_download': '⬇️ 다운로드',
+    'modal.storage_title': '저장 폴더 설정',
+    'modal.storage_btn_save': '저장 및 적용',
+    'toast.copied': '클립보드에 복사되었습니다!',
+  },
 };
 
-let currentLang = localStorage.getItem('quickshare_lang') || (navigator.language && navigator.language.startsWith('vi') ? 'vi' : 'en');
+// Detect initial language
+function detectInitialLanguage() {
+  const saved = localStorage.getItem('quickshare_lang');
+  if (saved && SUPPORTED_LANGUAGES[saved]) return saved;
+  const navLang = (navigator.language || '').toLowerCase();
+  if (navLang.startsWith('vi')) return 'vi';
+  if (navLang.startsWith('ja')) return 'ja';
+  if (navLang.startsWith('zh')) return 'zh';
+  if (navLang.startsWith('ko')) return 'ko';
+  return 'en';
+}
 
-function t(key) {
+let currentLang = detectInitialLanguage();
+
+/**
+ * Translate key with fallback chain: currentLang -> en -> key
+ * Supports parameter interpolation: t('hello {name}', { name: 'World' })
+ */
+function t(key, params = null) {
+  let str = null;
   if (translations[currentLang] && translations[currentLang][key]) {
-    return translations[currentLang][key];
+    str = translations[currentLang][key];
+  } else if (translations.en && translations.en[key]) {
+    str = translations.en[key];
+  } else {
+    str = key;
   }
-  if (translations.en[key]) {
-    return translations.en[key];
+
+  if (params && typeof params === 'object') {
+    Object.keys(params).forEach((p) => {
+      str = str.replace(new RegExp(`\\{${p}\\}`, 'g'), params[p]);
+    });
   }
-  return key;
+  return str;
+}
+
+/**
+ * Register a new language dynamically at runtime.
+ * Usage: window.registerLanguage('fr', { name: 'Français', flag: '🇫🇷' }, { ...translations })
+ */
+function registerLanguage(code, metadata, dictionary) {
+  if (!code || !metadata || !dictionary) return false;
+  SUPPORTED_LANGUAGES[code] = { code, ...metadata };
+  translations[code] = { ...dictionary };
+  renderLanguageDropdown();
+  return true;
+}
+
+function getSupportedLanguages() {
+  return Object.values(SUPPORTED_LANGUAGES);
 }
 
 function setLanguage(lang) {
-  if (lang !== 'vi' && lang !== 'en') lang = 'en';
+  if (!SUPPORTED_LANGUAGES[lang]) lang = 'en';
   currentLang = lang;
   localStorage.setItem('quickshare_lang', lang);
   document.documentElement.lang = lang;
   updateDomTranslations();
-  
-  // Trigger event for dynamic JS listeners
-  window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
-}
+  renderLanguageDropdown();
 
-function toggleLanguage() {
-  setLanguage(currentLang === 'vi' ? 'en' : 'vi');
+  window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang, meta: SUPPORTED_LANGUAGES[lang] } }));
 }
 
 function updateDomTranslations() {
-  // Update data-i18n elements
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     const key = el.getAttribute('data-i18n');
     const translation = t(key);
@@ -262,22 +419,46 @@ function updateDomTranslations() {
     }
   });
 
-  // Update data-i18n-title elements
   document.querySelectorAll('[data-i18n-title]').forEach((el) => {
     const key = el.getAttribute('data-i18n-title');
     el.title = t(key);
   });
 
-  // Update lang toggle button text
-  const currentLangLabel = document.getElementById('current-lang-label');
-  if (currentLangLabel) {
-    currentLangLabel.innerText = currentLang === 'vi' ? '🇻🇳 VI' : '🇺🇸 EN';
-  }
+  const langInfo = SUPPORTED_LANGUAGES[currentLang] || SUPPORTED_LANGUAGES.en;
+  const currentLangFlag = document.getElementById('current-lang-flag');
+  const currentLangName = document.getElementById('current-lang-name');
+  if (currentLangFlag) currentLangFlag.innerText = langInfo.flag;
+  if (currentLangName) currentLangName.innerText = langInfo.code.toUpperCase();
 }
 
-// Export to global window
+function renderLanguageDropdown() {
+  const menu = document.getElementById('lang-dropdown-menu');
+  if (!menu) return;
+
+  menu.innerHTML = Object.values(SUPPORTED_LANGUAGES)
+    .map((lang) => `
+      <button type="button" class="lang-option ${lang.code === currentLang ? 'active' : ''}" data-lang="${lang.code}">
+        <span>${lang.flag}</span>
+        <span>${lang.name}</span>
+      </button>
+    `)
+    .join('');
+
+  menu.querySelectorAll('.lang-option').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const code = btn.getAttribute('data-lang');
+      setLanguage(code);
+      menu.classList.add('hidden');
+    });
+  });
+}
+
+// Global Exports
 window.t = t;
 window.currentLang = () => currentLang;
 window.setLanguage = setLanguage;
-window.toggleLanguage = toggleLanguage;
+window.registerLanguage = registerLanguage;
+window.getSupportedLanguages = getSupportedLanguages;
 window.updateDomTranslations = updateDomTranslations;
+window.renderLanguageDropdown = renderLanguageDropdown;

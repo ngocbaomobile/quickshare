@@ -25,10 +25,15 @@
       </div>
 
       <div style="display: flex; gap: 8px; align-items: center;">
-        <!-- Language Switcher Button -->
-        <button id="btn-toggle-lang" class="btn btn-secondary btn-sm" style="font-weight: 600; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2);" title="Change language / Đổi ngôn ngữ">
-          <span id="current-lang-label">🇻🇳 VI</span>
-        </button>
+        <!-- Language Selector Dropdown -->
+        <div class="lang-dropdown-wrapper">
+          <button id="btn-lang-dropdown" class="btn btn-secondary btn-sm" style="font-weight: 600; padding: 4px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 4px;" title="Select Language / Chọn ngôn ngữ">
+            <span id="current-lang-flag">🇻🇳</span>
+            <span id="current-lang-name">VI</span>
+            <span style="font-size: 9px; opacity: 0.7; margin-left: 2px;">▼</span>
+          </button>
+          <div id="lang-dropdown-menu" class="lang-dropdown-menu hidden"></div>
+        </div>
 
         <button id="btn-toggle-public" class="btn btn-secondary btn-sm mac-only" style="border-color: rgba(59, 130, 246, 0.4); color: #60a5fa;" title="Chia sẻ ra ngoài Internet qua Cloudflare Tunnel">
           🌐 Public: <span id="public-status-text">TẮT</span>

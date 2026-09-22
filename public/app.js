@@ -23,14 +23,19 @@
       }
     }
 
-    // Language Toggle Setup
-    const btnToggleLang = document.getElementById('btn-toggle-lang');
-    if (btnToggleLang) {
-      btnToggleLang.addEventListener('click', () => {
-        if (window.toggleLanguage) {
-          window.toggleLanguage();
-          updateTitles();
-          loadFiles();
+    // Extensible Language Dropdown Setup
+    const btnLangDropdown = document.getElementById('btn-lang-dropdown');
+    const langDropdownMenu = document.getElementById('lang-dropdown-menu');
+
+    if (btnLangDropdown && langDropdownMenu) {
+      btnLangDropdown.addEventListener('click', (e) => {
+        e.stopPropagation();
+        langDropdownMenu.classList.toggle('hidden');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!langDropdownMenu.contains(e.target) && !btnLangDropdown.contains(e.target)) {
+          langDropdownMenu.classList.add('hidden');
         }
       });
     }
@@ -40,6 +45,9 @@
       loadFiles();
     });
 
+    if (window.renderLanguageDropdown) {
+      window.renderLanguageDropdown();
+    }
     if (window.updateDomTranslations) {
       window.updateDomTranslations();
     }
