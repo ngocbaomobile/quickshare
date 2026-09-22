@@ -428,16 +428,77 @@
     }
     btnRefreshClipboard.addEventListener('click', loadClipboard);
 
+    async function copyToClipboard(text) {
+      if (!text) return false;
+
+      // 1. Try modern navigator.clipboard (available on HTTPS or localhost)
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch (e) {
+          // Fallback below
+        }
+      }
+
+      // 2. Battle-tested fallback for iOS Safari and mobile browsers on local HTTP
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        textArea.style.top = '0';
+        textArea.style.fontSize = '16px'; // Prevent auto-zoom on iOS
+        textArea.setAttribute('readonly', '');
+        document.body.appendChild(textArea);
+
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, text.length);
+
+        let successful = false;
+        try {
+          successful = document.execCommand('copy');
+        } catch (e) {
+          successful = false;
+        }
+
+        // If readonly attribute blocked copy on specific iOS versions
+        if (!successful) {
+          textArea.removeAttribute('readonly');
+          textArea.select();
+          textArea.setSelectionRange(0, text.length);
+          successful = document.execCommand('copy');
+        }
+
+        document.body.removeChild(textArea);
+        return successful;
+      } catch (err) {
+        console.warn('Fallback copy error:', err);
+        return false;
+      }
+    }
+
     btnCopyToPhone.addEventListener('click', async () => {
       if (!currentMacClipboard) {
         showToast(tr('toast.clipboard_empty', 'Clipboard Mac trống!'), '⚠️');
         return;
       }
-      try {
-        await navigator.clipboard.writeText(currentMacClipboard);
+      const ok = await copyToClipboard(currentMacClipboard);
+      if (ok) {
         showToast(tr('toast.copied', 'Đã copy vào bộ nhớ tạm!'), '📋');
-      } catch (err) {
-        showToast(tr('toast.copy_err', 'Lỗi khi copy vào điện thoại'), '❌');
+      } else {
+        // Fallback for restricted iOS webview: auto-select text so user can tap native "Copy"
+        try {
+          const range = document.createRange();
+          range.selectNodeContents(macClipboardContent);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          showToast(tr('toast.copy_manual_hint', 'Đã chọn văn bản, chạm "Sao chép" trên màn hình'), '📋');
+        } catch (e) {
+          showToast(tr('toast.copy_err', 'Lỗi khi copy vào điện thoại'), '❌');
+        }
       }
     });
 
@@ -1055,10 +1116,14 @@
     }
 
     if (btnCopyPublicLink) {
-      btnCopyPublicLink.addEventListener('click', () => {
+      btnCopyPublicLink.addEventListener('click', async () => {
         const link = publicShareLink.innerText;
-        navigator.clipboard.writeText(link);
-        showToast(tr('modal.public_btn_copy', 'Đã copy link kèm mã PIN!'), '📋');
+        const ok = await copyToClipboard(link);
+        if (ok) {
+          showToast(tr('modal.public_btn_copy', 'Đã copy link kèm mã PIN!'), '📋');
+        } else {
+          showToast(tr('toast.copy_err', 'Lỗi khi copy link'), '❌');
+        }
       });
     }
 
