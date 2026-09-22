@@ -620,6 +620,9 @@
                 <button onclick="previewImage('${encName}', '${f.direct_url}')" class="btn btn-secondary btn-sm mac-only" title="${tr('files.btn_preview', 'Xem ảnh lớn')}">
                   ${tr('files.btn_preview', '👁️ Xem')}
                 </button>
+                <button onclick="copyImage('${f.direct_url}')" class="btn btn-secondary btn-sm" title="${tr('files.btn_copy_image', 'Sao chép ảnh')}">
+                  ${tr('files.btn_copy_image', '📋 Copy ảnh')}
+                </button>
                 <button onclick="saveToGallery('${encName}')" class="btn btn-sm phone-only" style="background: #2563eb; color: #fff;" title="${tr('files.btn_album', 'Lưu vào Album')}">
                   ${tr('files.btn_album', '🖼️ Album')}
                 </button>
@@ -661,8 +664,85 @@
     const previewModalImg = document.getElementById('preview-modal-img');
     const previewModalFilename = document.getElementById('preview-modal-filename');
     const previewModalDownload = document.getElementById('preview-modal-download');
+    const previewModalCopy = document.getElementById('preview-modal-copy');
     const btnClosePreviewModal = document.getElementById('btn-close-preview-modal');
     const btnClosePreviewAction = document.getElementById('btn-close-preview-action');
+
+    function convertBlobToPng(blob) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        const url = URL.createObjectURL(blob);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((pngBlob) => {
+            if (pngBlob) resolve(pngBlob);
+            else resolve(blob);
+          }, 'image/png');
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(blob);
+        };
+        img.src = url;
+      });
+    }
+
+    window.copyImage = async function(imageUrl) {
+      if (!imageUrl) return;
+      showToast(tr('toast.copying_image', 'Đang nạp ảnh vào bộ nhớ tạm...'), '⏳');
+
+      try {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+
+        let pngBlob = blob;
+        if (blob.type !== 'image/png') {
+          pngBlob = await convertBlobToPng(blob);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.write) {
+          const item = new ClipboardItem({ 'image/png': pngBlob });
+          await navigator.clipboard.write([item]);
+          showToast(tr('toast.image_copied', 'Đã copy ảnh vào Clipboard! Có thể dán (Cmd+V) ngay'), '📋');
+          return;
+        }
+      } catch (err) {
+        console.warn('Direct image clipboard write failed:', err);
+      }
+
+      // Mobile / iOS fallback: open native share sheet where user can tap "Sao chép" (Copy)
+      try {
+        const filename = decodeURIComponent(imageUrl.split('/').pop() || 'image.png');
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const file = new File([blob], filename, { type: blob.type || 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: filename,
+          });
+          return;
+        }
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+      }
+
+      showToast(tr('toast.copy_image_hint', 'Hãy chạm giữ ảnh trên màn hình để chọn "Sao chép"'), '💡');
+    };
+
+    if (previewModalCopy) {
+      previewModalCopy.addEventListener('click', () => {
+        if (previewModalImg && previewModalImg.src) {
+          window.copyImage(previewModalImg.src);
+        }
+      });
+    }
 
     window.previewImage = function(encName, url) {
       if (!imagePreviewModal) return;
