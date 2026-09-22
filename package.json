@@ -4,7 +4,7 @@
   "description": "Bi-directional clipboard and file transfer between macOS, Windows, iOS, and Android over local Wi-Fi and Cloudflare Tunnel.",
   "main": "server.js",
   "bin": {
-    "quickshare": "./bin/cli.js"
+    "quickshare": "bin/cli.js"
   },
   "scripts": {
     "start": "node server.js",
