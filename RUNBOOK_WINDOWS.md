@@ -4,7 +4,28 @@ This runbook provides complete operational instructions for installing, configur
 
 ---
 
-## 1. System Requirements & Prerequisites
+## ⚡ 1-Step Automated Install (Recommended)
+
+### Method 1: Single PowerShell Command
+Open PowerShell and run:
+```powershell
+iwr -useb https://raw.githubusercontent.com/ngocbaomobile/quickshare/main/install.ps1 | iex
+```
+
+### Method 2: Double-Click File (Zero-Typing for Non-Tech Users)
+Download [**`setup.bat`**](https://raw.githubusercontent.com/ngocbaomobile/quickshare/main/setup.bat) and simply double-click it.
+
+**What happens automatically:**
+1. Installs Node.js LTS via `winget` if not detected.
+2. Downloads QuickShare to `%USERPROFILE%\QuickShare`.
+3. Installs dependencies.
+4. Adds an inbound allow rule for Port 5050 in Windows Defender Firewall.
+5. Generates a double-clickable **`QuickShare`** shortcut on your Desktop.
+6. Launches QuickShare and opens `http://localhost:5050` in your default browser.
+
+---
+
+## 1. Manual Prerequisites
 
 - **Operating System**: Windows 10 (version 1903+) or Windows 11 (64-bit / ARM64).
 - **Node.js**: Version 18.0.0 or higher.

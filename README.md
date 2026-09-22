@@ -19,6 +19,25 @@
 
 ---
 
+## ⚡ 1-Step Quick Install (For Everyone)
+
+### 🍏 macOS (Terminal)
+Copy and paste this single command into Terminal:
+```bash
+curl -fsSL https://raw.githubusercontent.com/ngocbaomobile/quickshare/main/install.sh | bash
+```
+*Auto-installs Node.js if missing, creates a `QuickShare.command` launcher on your Desktop, registers CLI aliases, and launches the app immediately in your browser.*
+
+### 🪟 Windows (PowerShell)
+Copy and paste this single command into PowerShell:
+```powershell
+iwr -useb https://raw.githubusercontent.com/ngocbaomobile/quickshare/main/install.ps1 | iex
+```
+*(Or simply download and double-click [**`setup.bat`**](https://raw.githubusercontent.com/ngocbaomobile/quickshare/main/setup.bat))*  
+*Auto-installs Node.js LTS via winget, configures Windows Defender Firewall for port 5050, creates a Desktop shortcut, and launches QuickShare automatically.*
+
+---
+
 ## 📖 Runbooks & Guides
 
 Detailed step-by-step setup guides, autostart on boot, firewall configuration, and troubleshooting are available:
@@ -27,7 +46,7 @@ Detailed step-by-step setup guides, autostart on boot, firewall configuration, a
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Manual Getting Started
 
 ### 1. Prerequisites
 - **Node.js** (v18 or higher recommended)

@@ -4,7 +4,23 @@ This runbook provides complete operational instructions for installing, configur
 
 ---
 
-## 1. System Requirements & Prerequisites
+## ⚡ 1-Step Automated Install (Recommended)
+
+Just open your macOS Terminal and run this single command:
+```bash
+curl -fsSL https://raw.githubusercontent.com/ngocbaomobile/quickshare/main/install.sh | bash
+```
+**What happens automatically:**
+1. Checks for Node.js (installs it via Homebrew if not found).
+2. Clones or updates QuickShare to `~/QuickShare`.
+3. Installs all required dependencies.
+4. Generates a double-clickable **`QuickShare.command`** on your Desktop.
+5. Registers shell aliases (`quickshare-on`, `quickshare-off`).
+6. Starts the server in background and opens `http://localhost:5050` in your browser.
+
+---
+
+## 1. Manual Prerequisites
 
 - **Operating System**: macOS Monterey (12.0) or higher (Apple Silicon M1/M2/M3/M4 or Intel).
 - **Node.js**: Version 18.0.0 or higher.
