@@ -697,30 +697,63 @@
       if (!imageUrl) return;
       showToast(tr('toast.copying_image', 'Đang nạp ảnh vào bộ nhớ tạm...'), '⏳');
 
-      try {
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
+      // 1. Direct 1-Click Clipboard Copy via Promise-based ClipboardItem (Official Safari 13.1+ & Chromium)
+      // Must instantiate ClipboardItem synchronously without await fetch to preserve user gesture
+      if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
+        try {
+          const blobPromise = fetch(imageUrl)
+            .then(res => {
+              if (!res.ok) throw new Error('Fetch failed');
+              return res.blob();
+            })
+            .then(blob => {
+              if (blob.type === 'image/png') return blob;
+              return convertBlobToPng(blob);
+            });
 
-        let pngBlob = blob;
-        if (blob.type !== 'image/png') {
-          pngBlob = await convertBlobToPng(blob);
-        }
-
-        if (navigator.clipboard && navigator.clipboard.write) {
-          const item = new ClipboardItem({ 'image/png': pngBlob });
+          const item = new ClipboardItem({ 'image/png': blobPromise });
           await navigator.clipboard.write([item]);
+          showToast(tr('toast.image_copied', 'Đã copy ảnh vào Clipboard! Có thể dán (Cmd+V) ngay'), '📋');
+          return;
+        } catch (err) {
+          console.warn('Direct image clipboard write failed, trying fallback:', err);
+        }
+      }
+
+      // 2. Fallback via Rich HTML execCommand('copy') (Works in non-secure HTTP contexts)
+      try {
+        const div = document.createElement('div');
+        div.contentEditable = 'true';
+        div.style.position = 'fixed';
+        div.style.left = '-9999px';
+        div.style.top = '0';
+        div.style.opacity = '0';
+        div.innerHTML = `<img src="${imageUrl}" alt="image">`;
+        document.body.appendChild(div);
+
+        const range = document.createRange();
+        range.selectNodeContents(div);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        const success = document.execCommand('copy');
+        document.body.removeChild(div);
+        sel.removeAllRanges();
+
+        if (success) {
           showToast(tr('toast.image_copied', 'Đã copy ảnh vào Clipboard! Có thể dán (Cmd+V) ngay'), '📋');
           return;
         }
       } catch (err) {
-        console.warn('Direct image clipboard write failed:', err);
+        console.warn('execCommand image copy failed:', err);
       }
 
-      // Mobile / iOS fallback: open native share sheet where user can tap "Sao chép" (Copy)
+      // 3. Fallback: Open Native Share Sheet (where user taps "Sao chép" or "Lưu ảnh")
       try {
         const filename = decodeURIComponent(imageUrl.split('/').pop() || 'image.png');
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
+        const res = await fetch(imageUrl);
+        const blob = await res.blob();
         const file = new File([blob], filename, { type: blob.type || 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
           await navigator.share({
@@ -733,7 +766,12 @@
         if (e.name === 'AbortError') return;
       }
 
-      showToast(tr('toast.copy_image_hint', 'Hãy chạm giữ ảnh trên màn hình để chọn "Sao chép"'), '💡');
+      // 4. Last resort: open preview modal for direct view & copy
+      const encName = encodeURIComponent(imageUrl.split('/').pop() || 'image.png');
+      if (typeof window.previewImage === 'function') {
+        window.previewImage(encName, imageUrl);
+      }
+      showToast(tr('toast.copy_image_hint', 'Chạm giữ vào ảnh để chọn "Sao chép"'), '💡');
     };
 
     if (previewModalCopy) {
