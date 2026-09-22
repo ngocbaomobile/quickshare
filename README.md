@@ -1,5 +1,12 @@
 # ⚡ QuickShare — Mac ↔ iPhone | Samsung (LAN & Public Transfer)
 
+<p align="left">
+  <a href="https://www.npmjs.com/package/@ngocbaongo/quickshare"><img src="https://img.shields.io/npm/v/@ngocbaongo/quickshare.svg?style=flat-square&color=cb3837&logo=npm" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@ngocbaongo/quickshare"><img src="https://img.shields.io/npm/dt/@ngocbaongo/quickshare.svg?style=flat-square&color=blue" alt="npm downloads"></a>
+  <a href="https://github.com/ngocbaomobile/quickshare"><img src="https://img.shields.io/github/stars/ngocbaomobile/quickshare?style=flat-square&color=ffd700" alt="GitHub stars"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-green.svg?style=flat-square" alt="License: MIT"></a>
+</p>
+
 > Seamless, bi-directional text (clipboard) and file/photo transfer between **macOS**, **Windows**, **iOS (iPhone)**, and **Android (Samsung)** with zero mobile app installation. Works over local Wi-Fi and global Internet via Cloudflare Tunnel.
 
 <p align="center">
