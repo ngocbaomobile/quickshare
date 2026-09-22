@@ -6,16 +6,15 @@
 
 ## ✨ Key Features
 
-- 🚫 **Zero App Installation:** No app needed on iPhone or Samsung. Works directly with native Cameras and mobile browsers (Safari, Chrome, Samsung Internet).
-- 🔒 **100% Local LAN Speed:** Direct peer-to-peer transfer inside your Wi-Fi network at maximum local speeds. Zero internet bandwidth consumed.
-- 🌐 **Instant Public Sharing (Cloudflare Tunnel):** Share files with anyone on 4G/5G or outside networks via an encrypted, public HTTPS link protected by a **4-digit PIN**.
-- 🛡️ **Role-Based Security for Public Visitors:** Remote guests are strictly limited to downloading shared files and viewing text. Destructive actions (file deletion, local Finder operations) are blocked.
-- 🎯 **Device-Aware UI:** Automatically detects whether the client is a Mac or a smartphone, displaying a clean, tailored interface with zero redundant buttons.
-- 📸 **Direct Download QR:** Mobile camera scans the QR code and triggers an immediate native download prompt with `Content-Disposition: attachment`.
-- 🔤 **Raw Text QR (Zero-Network Copy):** Generates native raw text QR codes. iPhone and Samsung cameras detect the text and provide a 1-tap "Copy Text" button right on the camera screen without launching a browser.
-- ⌨️ **Cmd + V Instant Paste on Mac:** Take a screenshot (`Cmd + Ctrl + Shift + 4`) and press `Cmd + V` anywhere on the web page to instantly upload and generate a Direct Download QR code in under 0.5s.
-- 🖼️ **Save to Camera Roll / Gallery:** Includes a 1-tap "Save to Album" button on mobile leveraging the Web Share API to save directly to iOS Photos or Samsung Gallery.
-- 💻 **Dedicated macOS CLI:** Quick control directly from Terminal via `quickshare-on`, `quickshare-off`, and `quickshare-public`.
+- 🚫 **Zero Mobile Install:** Works instantly via Camera & Browser (Safari, Chrome).
+- ⚡ **Full Local Speed:** Fast Wi-Fi transfer, 100% local, zero internet data consumed.
+- 🌐 **Public Share (4G/5G):** Encrypted Cloudflare link secured with a 4-digit PIN.
+- 🎯 **Adaptive UI:** Clean, responsive interface tailored for Desktop or Mobile.
+- 📸 **Instant QR Download:** Scan with Camera to download files immediately.
+- 🔤 **Raw Text QR:** 1-tap copy directly on camera screen without opening a browser.
+- 📋 **Instant Clipboard Sync:** Copy & paste text or screenshots via `Cmd+V` / `Ctrl+V`.
+- 🖼️ **1-Tap Save to Photos:** Saves directly to iOS Photos & Samsung Gallery.
+- 💻 **Cross-Platform:** Native support for both macOS and Windows with 1-click launchers.
 
 ---
 
