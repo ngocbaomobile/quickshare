@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quick Share - Mac ↔ iPhone | Samsung</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --primary-glow: rgba(16, 185, 129, 0.25);
+      --surface: #1e293b;
+      --input-bg: #0f172a;
+      --input-border: #334155;
+      --accent-blue: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    /* Device-specific Visibility */
+    body.is-phone .mac-only {
+      display: none !important;
+    }
+
+    body.is-mac .phone-only {
+      display: none !important;
+    }
+
+    .app-container {
+      max-width: 620px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #10b981, #065f46);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.2); }
+    }
+
+    /* Tabs Navigation */
+    .tabs-nav {
+      display: flex;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 4px;
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+      gap: 4px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .tab-btn.active {
+      background: var(--surface);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      padding: 12px;
+      resize: vertical;
+      min-height: 90px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover {
+      background: #334155;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+
+    .subtabs-pill {
+      display: flex;
+      background: var(--input-bg);
+      padding: 3px;
+      border-radius: 12px;
+      border: 1px solid var(--input-border);
+      gap: 4px;
+    }
+
+    .subtab-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .subtab-btn.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .media-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px dashed var(--input-border);
+      border-radius: 16px;
+      padding: 20px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+
+    .media-card.drag-over {
+      border-color: #10b981 !important;
+      background: rgba(16, 185, 129, 0.25) !important;
+      transform: scale(1.02);
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+    }
+
+    .media-card:hover {
+      border-color: var(--primary);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .media-card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .media-card-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .media-card-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .clipboard-display {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 13px;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 120px;
+      overflow-y: auto;
+      user-select: all;
+    }
+
+    .clipboard-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 12px;
+    }
+
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+    }
+
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .file-icon {
+      font-size: 20px;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .file-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 170px;
+    }
+
+    .file-size {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .file-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .instant-qr-box {
+      background: #ffffff;
+      padding: 18px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      width: 220px;
+      height: 220px;
+      margin: 0 auto;
+    }
+
+    .hint-pill {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 12px;
+      color: #34d399;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #10b981;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 1000;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      padding: 16px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #1e293b;
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 24px;
+      max-width: 360px;
+      width: 100%;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .qr-container {
+      background: white;
+      padding: 16px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+
+    .desktop-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: auto;
+      padding-top: 10px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="is-mac">
+
+  <div class="app-container">
+    <!-- Header -->
+    <header>
+      <div class="brand">
+        <div class="logo-icon">⚡</div>
+        <div>
+          <div class="brand-title" id="app-title">Quick Share</div>
+          <div style="font-size: 11px; color: var(--text-muted);" id="mac-ip-label">Đang kết nối Wi-Fi...</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button id="btn-show-app-qr" class="btn btn-secondary btn-sm mac-only" title="Mở mã QR kết nối điện thoại">
+          📱 Kết nối ĐT
+        </button>
+        <div class="status-badge">
+          <div class="status-dot"></div>
+          <span id="badge-label">Online</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav">
+      <!-- MAC ONLY TAB -->
+      <button class="tab-btn active mac-only" data-tab="tab-instant-qr">
+        <span>🎯</span>
+        <span>QR Tải Ngay</span>
+      </button>
+
+      <!-- PHONE ONLY TAB (Active by default on phone) -->
+      <button class="tab-btn phone-only" data-tab="tab-media">
+        <span>📷</span>
+        <span>Gửi Ảnh/Video</span>
+      </button>
+
+      <!-- SHARED TABS -->
+      <button class="tab-btn" data-tab="tab-text">
+        <span>📋</span>
+        <span>Văn bản</span>
+      </button>
+
+      <button class="tab-btn" data-tab="tab-files">
+        <span>📂</span>
+        <span id="tab-files-title">Tệp QuickShare</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: INSTANT QR (MAC ONLY - DÙNG CHO MÁY MAC ĐỂ SINH MÃ CHO ĐIỆN THOẠI QUÉT) -->
+    <div id="tab-instant-qr" class="tab-content mac-only">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🎯 Tạo mã QR Tải Trực Tiếp về Điện thoại</div>
+        </div>
+
+        <div class="subtabs-pill">
+          <button class="subtab-btn active" id="subtab-file-mode">📁 Tệp / Hình ảnh</button>
+          <button class="subtab-btn" id="subtab-text-mode">🔤 Văn bản (Text thô)</button>
+        </div>
+
+        <!-- File Mode -->
+        <div id="instant-qr-file-section" style="display: flex; flex-direction: column; gap: 12px;">
+          <label id="instant-dropzone" class="media-card" style="padding: 16px;">
+            <input type="file" id="instant-file-input" class="hidden">
+            <div class="media-card-icon">📂</div>
+            <div class="media-card-text">Kéo thả hoặc Bấm chọn Tệp / Ảnh từ Mac</div>
+            <div class="media-card-sub">Hỗ trợ mọi định dạng (Ảnh, PDF, Video, Zip...)</div>
+          </label>
+
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 12px; color: #34d399; background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 10px 14px; text-align: center;">
+            <span style="font-size: 16px;">⚡</span>
+            <span><b>Phím tắt Mac:</b> Chụp màn hình xong bấm <b>Cmd + V</b> bất kỳ đâu trên trang này để sinh mã QR tức thì!</span>
+          </div>
+
+          <!-- Generated QR Container -->
+          <div id="file-qr-display" class="hidden" style="display: flex; flex-direction: column; align-items: center; gap: 12px;">
+            <div class="instant-qr-box" id="file-qrcode-box"></div>
+            
+            <div style="text-align: center;">
+              <div style="font-weight: 600; font-size: 14px; color: #fff;" id="file-qr-name">Tên tệp</div>
+              <div style="font-size: 12px; color: var(--text-muted);" id="file-qr-size">0 KB</div>
+            </div>
+
+            <div class="hint-pill">
+              📱 <b>Quét tải tức thì:</b> Mở Camera iPhone hoặc Samsung chĩa vào mã trên -> Chạm vào link hiện lên -> File sẽ <b>tự động tải về máy</b> mà không qua web!
+            </div>
+          </div>
+        </div>
+
+        <!-- Text Mode -->
+        <div id="instant-qr-text-section" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; color: var(--text-muted);">Nhập văn bản cần sinh QR:</span>
+            <button id="btn-use-mac-clipboard-for-qr" class="btn btn-secondary btn-sm">📋 Lấy từ Clipboard Mac</button>
+          </div>
+
+          <textarea id="raw-text-input" placeholder="Gõ hoặc dán nội dung text, link, mật khẩu..."></textarea>
+
+          <button id="btn-gen-text-qr" class="btn btn-primary">
+            <span>Tạo mã QR Văn bản</span>
+          </button>
+
+          <div id="text-qr-display" class="hidden" style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 6px;">
+            <div class="instant-qr-box" id="text-qrcode-box"></div>
+
+            <div class="hint-pill" style="color: #60a5fa; background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2);">
+              ✨ <b>Không cần mạng / web:</b> Chĩa Camera iPhone hoặc Samsung vào mã -> Camera tự hiện nội dung và có nút <b>"Sao chép văn bản" (Copy)</b> ngay trên Camera!
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: TEXT SYNC (MAC & PHONE ĐỀU DÙNG) -->
+    <div id="tab-text" class="tab-content hidden">
+      <!-- Box 1: Send text to Mac -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🚀 Gửi Text vào Mac Clipboard</div>
+          <button id="btn-paste-phone" class="btn btn-secondary btn-sm phone-only">Dán từ điện thoại</button>
+        </div>
+
+        <textarea id="text-input" placeholder="Dán hoặc gõ nội dung (link, tin nhắn, mã code, mật khẩu...)"></textarea>
+
+        <button id="btn-send-text" class="btn btn-primary">
+          <span>Gửi vào Mac Clipboard (Cmd + V)</span>
+        </button>
+      </div>
+
+      <!-- Box 2: Read Mac Clipboard -->
+      <div class="card" style="margin-top: 16px;">
+        <div class="card-header">
+          <div class="card-title">💻 Clipboard hiện tại trên Mac</div>
+          <button id="btn-refresh-clipboard" class="btn btn-secondary btn-sm">🔄 Làm mới</button>
+        </div>
+
+        <div id="mac-clipboard-content" class="clipboard-display">
+          <span class="clipboard-empty">Đang đọc clipboard Mac...</span>
+        </div>
+
+        <button id="btn-copy-to-phone" class="btn btn-secondary">
+          <span class="phone-only">📋 Sao chép vào điện thoại</span>
+          <span class="mac-only">📋 Sao chép nội dung này</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 3: MEDIA (PHONE ONLY - CHỤP ẢNH & CHỌN TỪ BỘ SƯU TẬP GỬI SANG MAC) -->
+    <div id="tab-media" class="tab-content hidden phone-only">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📷 Gửi Ảnh / Video sang Mac</div>
+        </div>
+
+        <div class="media-grid">
+          <label class="media-card">
+            <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden">
+            <div class="media-card-icon">📸</div>
+            <div class="media-card-text">Chụp ảnh</div>
+            <div class="media-card-sub">Mở camera ngay</div>
+          </label>
+
+          <label class="media-card">
+            <input type="file" id="gallery-input" multiple accept="*/*" class="hidden">
+            <div class="media-card-icon">🖼️</div>
+            <div class="media-card-text">Thư viện ảnh</div>
+            <div class="media-card-sub">Chọn ảnh / video / tệp</div>
+          </label>
+        </div>
+
+        <div id="selected-files-container" class="hidden" style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+          <div style="font-size: 12px; font-weight: 600; color: var(--text-muted);" id="selected-files-count">Đã chọn:</div>
+          <div id="selected-files-list" style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; font-size: 12px;"></div>
+          <button id="btn-upload-files" class="btn btn-primary" style="margin-top: 6px;">
+            <span>📤 Gửi ngay sang Mac (Lưu vào Downloads)</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: FILES LIST (MAC & PHONE) -->
+    <div id="tab-files" class="tab-content hidden">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="phone-only">📂 Tệp từ Mac gửi sang</span>
+            <span class="mac-only">📂 Thư mục QuickShare (~/Downloads)</span>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button id="btn-open-folder" class="btn btn-secondary btn-sm mac-only" title="Mở Finder trên Mac">📁 Finder</button>
+            <button id="btn-refresh-files" class="btn btn-secondary btn-sm">🔄</button>
+          </div>
+        </div>
+
+        <div id="files-list" class="file-list">
+          <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 24px;">Đang tải danh sách file...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="desktop-hint">
+      <span class="mac-only">Đang chạy trên <b>Mac</b> • Thư mục lưu: <b>~/Downloads/QuickShare</b></span>
+      <span class="phone-only">Đã kết nối với <b>Mac</b> qua mạng Wi-Fi nội bộ</span>
+    </div>
+  </div>
+
+  <!-- Modal: Connect App QR (MAC ONLY) -->
+  <div id="qr-modal" class="modal-overlay mac-only">
+    <div class="modal-card">
+      <div style="font-weight: 700; font-size: 16px;">📱 Mở Trang Web trên Điện thoại</div>
+      <p style="font-size: 12px; color: var(--text-muted);">Mở Camera iPhone hoặc Samsung quét mã này để vào web điều khiển:</p>
+      
+      <div id="modal-qrcode" class="qr-container"></div>
+      
+      <div style="font-size: 12px; font-family: monospace; color: #34d399; background: #0f172a; padding: 8px 12px; border-radius: 10px; width: 100%; word-break: break-all;" id="modal-url">
+        ...
+      </div>
+
+      <button id="btn-close-qr" class="btn btn-secondary" style="width: 100%;">Đóng</button>
+    </div>
+  </div>
+
+  <!-- Modal: Single File QR (MAC ONLY) -->
+  <div id="single-file-modal" class="modal-overlay mac-only">
+    <div class="modal-card">
+      <div style="font-weight: 700; font-size: 15px;" id="modal-file-title">Tải Tệp Trực Tiếp</div>
+      <div id="modal-file-qr" class="qr-container"></div>
+      <div class="hint-pill" style="font-size: 11px;">
+        Chĩa Camera iPhone / Samsung vào mã để tải thẳng tệp này về máy!
+      </div>
+      <button id="btn-close-file-modal" class="btn btn-secondary" style="width: 100%;">Đóng</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast">
+    <span id="toast-icon">✅</span>
+    <span id="toast-text">Thông báo</span>
+  </div>
+
+  <script>
+    // 1. DEVICE DETECTION: PHONE VS MAC
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      || (navigator.maxTouchPoints > 1 && window.innerWidth <= 768);
+
+    if (isMobile) {
+      document.body.classList.remove('is-mac');
+      document.body.classList.add('is-phone');
+      document.getElementById('app-title').innerText = '📱 Quick Share (Phone)';
+      document.getElementById('tab-files-title').innerText = 'Tệp từ Mac';
+    } else {
+      document.body.classList.remove('is-phone');
+      document.body.classList.add('is-mac');
+      document.getElementById('app-title').innerText = '💻 Quick Share (Mac)';
+      document.getElementById('tab-files-title').innerText = 'Tệp QuickShare';
+    }
+
+    // Elements
+    const toast = document.getElementById('toast');
+    const toastText = document.getElementById('toast-text');
+    const textInput = document.getElementById('text-input');
+    const btnSendText = document.getElementById('btn-send-text');
+    const btnPastePhone = document.getElementById('btn-paste-phone');
+    const macClipboardContent = document.getElementById('mac-clipboard-content');
+    const btnRefreshClipboard = document.getElementById('btn-refresh-clipboard');
+    const btnCopyToPhone = document.getElementById('btn-copy-to-phone');
+    const cameraInput = document.getElementById('camera-input');
+    const galleryInput = document.getElementById('gallery-input');
+    const selectedFilesContainer = document.getElementById('selected-files-container');
+    const selectedFilesCount = document.getElementById('selected-files-count');
+    const selectedFilesList = document.getElementById('selected-files-list');
+    const btnUploadFiles = document.getElementById('btn-upload-files');
+    const filesList = document.getElementById('files-list');
+    const btnRefreshFiles = document.getElementById('btn-refresh-files');
+    const btnOpenFolder = document.getElementById('btn-open-folder');
+    const qrModal = document.getElementById('qr-modal');
+    const btnShowAppQr = document.getElementById('btn-show-app-qr');
+    const btnCloseQr = document.getElementById('btn-close-qr');
+    const modalQrCode = document.getElementById('modal-qrcode');
+    const modalUrl = document.getElementById('modal-url');
+    const macIpLabel = document.getElementById('mac-ip-label');
+
+    // Instant QR Elements
+    const subtabFileMode = document.getElementById('subtab-file-mode');
+    const subtabTextMode = document.getElementById('subtab-text-mode');
+    const instantQrFileSection = document.getElementById('instant-qr-file-section');
+    const instantQrTextSection = document.getElementById('instant-qr-text-section');
+    const instantFileInput = document.getElementById('instant-file-input');
+    const fileQrDisplay = document.getElementById('file-qr-display');
+    const fileQrcodeBox = document.getElementById('file-qrcode-box');
+    const fileQrName = document.getElementById('file-qr-name');
+    const fileQrSize = document.getElementById('file-qr-size');
+    const rawTextInput = document.getElementById('raw-text-input');
+    const btnGenTextQr = document.getElementById('btn-gen-text-qr');
+    const btnUseMacClipboardForQr = document.getElementById('btn-use-mac-clipboard-for-qr');
+    const textQrDisplay = document.getElementById('text-qr-display');
+    const textQrcodeBox = document.getElementById('text-qrcode-box');
+    const instantDropzone = document.getElementById('instant-dropzone');
+
+    // Single File Modal
+    const singleFileModal = document.getElementById('single-file-modal');
+    const modalFileTitle = document.getElementById('modal-file-title');
+    const modalFileQr = document.getElementById('modal-file-qr');
+    const btnCloseFileModal = document.getElementById('btn-close-file-modal');
+
+    let currentMacClipboard = '';
+    let pendingFiles = [];
+
+    function showToast(msg, icon = '✅') {
+      toastText.innerText = msg;
+      document.getElementById('toast-icon').innerText = icon;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    // Tab Navigation
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+        btn.classList.add('active');
+        const content = document.getElementById(btn.dataset.tab);
+        if (content) content.classList.remove('hidden');
+        if (btn.dataset.tab === 'tab-files') loadFiles();
+        if (btn.dataset.tab === 'tab-text') loadClipboard();
+      });
+    });
+
+    // Default tab by device
+    if (isMobile) {
+      const defaultBtn = document.querySelector('[data-tab="tab-media"]');
+      if (defaultBtn) defaultBtn.click();
+    } else {
+      const defaultBtn = document.querySelector('[data-tab="tab-instant-qr"]');
+      if (defaultBtn) defaultBtn.click();
+    }
+
+    // Subtab File vs Text inside Instant QR
+    if (subtabFileMode && subtabTextMode) {
+      subtabFileMode.addEventListener('click', () => {
+        subtabFileMode.classList.add('active');
+        subtabTextMode.classList.remove('active');
+        instantQrFileSection.classList.remove('hidden');
+        instantQrTextSection.classList.add('hidden');
+      });
+
+      subtabTextMode.addEventListener('click', () => {
+        subtabTextMode.classList.add('active');
+        subtabFileMode.classList.remove('active');
+        instantQrTextSection.classList.remove('hidden');
+        instantQrFileSection.classList.add('hidden');
+      });
+    }
+
+    // System Info
+    async function loadInfo() {
+      try {
+        const res = await fetch('/api/info');
+        const data = await res.json();
+        if (isMobile) {
+          macIpLabel.innerText = `Kết nối với Mac: ${data.local_ip}`;
+        } else {
+          macIpLabel.innerText = `Wi-Fi IP: ${data.local_ip}:${data.port}`;
+        }
+        modalUrl.innerText = data.url;
+
+        if (modalQrCode) {
+          modalQrCode.innerHTML = '';
+          new QRCode(modalQrCode, {
+            text: data.url,
+            width: 180,
+            height: 180,
+            colorDark: '#0f172a',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        }
+      } catch (err) {
+        macIpLabel.innerText = 'Chưa kết nối được với server';
+      }
+    }
+
+    if (btnShowAppQr) btnShowAppQr.addEventListener('click', () => qrModal.classList.add('active'));
+    if (btnCloseQr) btnCloseQr.addEventListener('click', () => qrModal.classList.remove('active'));
+    if (qrModal) {
+      qrModal.addEventListener('click', (e) => {
+        if (e.target === qrModal) qrModal.classList.remove('active');
+      });
+    }
+
+    // --- INSTANT QR (MAC ONLY) ---
+    async function processInstantFile(file) {
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('file', file);
+
+      showToast('Đang tải file và sinh mã QR...', '⏳');
+
+      try {
+        const res = await fetch('/api/quick-qr-file', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          fileQrName.innerText = data.filename;
+          fileQrSize.innerText = formatBytes(data.size);
+          
+          fileQrcodeBox.innerHTML = '';
+          new QRCode(fileQrcodeBox, {
+            text: data.direct_url,
+            width: 190,
+            height: 190,
+            colorDark: '#0f172a',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+
+          fileQrDisplay.classList.remove('hidden');
+          showToast('Đã tạo mã QR tải trực tiếp!', '🎯');
+          loadFiles();
+        } else {
+          showToast(data.error || 'Lỗi tải file', '❌');
+        }
+      } catch (err) {
+        showToast('Lỗi khi tải file lên Mac', '❌');
+      }
+    }
+
+    if (instantFileInput) {
+      instantFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files.length > 0) {
+          processInstantFile(e.target.files[0]);
+          e.target.value = '';
+        }
+      });
+    }
+
+    if (instantDropzone) {
+      ['dragenter', 'dragover'].forEach(eventName => {
+        instantDropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          instantDropzone.classList.add('drag-over');
+        }, false);
+      });
+
+      ['dragleave', 'dragend'].forEach(eventName => {
+        instantDropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          instantDropzone.classList.remove('drag-over');
+        }, false);
+      });
+
+      instantDropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        instantDropzone.classList.remove('drag-over');
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+          processInstantFile(dt.files[0]);
+        }
+      }, false);
+    }
+
+    // Global drag & drop catcher for Mac desktop
+    window.addEventListener('dragover', (e) => e.preventDefault(), false);
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (!isMobile) {
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+          const tabInstantBtn = document.querySelector('[data-tab="tab-instant-qr"]');
+          if (tabInstantBtn) tabInstantBtn.click();
+          if (subtabFileMode) subtabFileMode.click();
+          processInstantFile(dt.files[0]);
+        }
+      }
+    }, false);
+
+    // Text QR Generation
+    if (btnGenTextQr) {
+      btnGenTextQr.addEventListener('click', () => {
+        const text = rawTextInput.value.trim();
+        if (!text) {
+          showToast('Vui lòng nhập văn bản!', '⚠️');
+          return;
+        }
+        if (text.length > 2500) {
+          showToast('Văn bản quá dài (>2500 ký tự)!', '⚠️');
+          return;
+        }
+
+        textQrcodeBox.innerHTML = '';
+        new QRCode(textQrcodeBox, {
+          text: text,
+          width: 190,
+          height: 190,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.L
+        });
+
+        textQrDisplay.classList.remove('hidden');
+        showToast('Đã tạo mã QR văn bản!', '✨');
+      });
+    }
+
+    if (btnUseMacClipboardForQr) {
+      btnUseMacClipboardForQr.addEventListener('click', async () => {
+        await loadClipboard();
+        if (currentMacClipboard) {
+          rawTextInput.value = currentMacClipboard;
+          btnGenTextQr.click();
+        } else {
+          showToast('Clipboard Mac trống!', '⚠️');
+        }
+      });
+    }
+
+    // --- TAB: TEXT SYNC ---
+    btnSendText.addEventListener('click', async () => {
+      const text = textInput.value.trim();
+      if (!text) {
+        showToast('Vui lòng nhập văn bản cần gửi!', '⚠️');
+        return;
+      }
+      btnSendText.disabled = true;
+      try {
+        const res = await fetch('/api/clipboard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('Đã nạp vào Clipboard Mac (Cmd + V)!', '🚀');
+          textInput.value = '';
+          loadClipboard();
+        } else {
+          showToast(data.error || 'Lỗi gửi text', '❌');
+        }
+      } catch (err) {
+        showToast('Không thể kết nối với Mac', '❌');
+      } finally {
+        btnSendText.disabled = false;
+      }
+    });
+
+    if (btnPastePhone) {
+      btnPastePhone.addEventListener('click', async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          textInput.value = text;
+          showToast('Đã dán text từ điện thoại!', '📋');
+        } catch (err) {
+          textInput.focus();
+          showToast('Hãy dán trực tiếp vào ô văn bản', '💡');
+        }
+      });
+    }
+
+    async function loadClipboard() {
+      try {
+        const res = await fetch('/api/clipboard');
+        const data = await res.json();
+        currentMacClipboard = data.text || '';
+        if (currentMacClipboard) {
+          macClipboardContent.innerText = currentMacClipboard;
+        } else {
+          macClipboardContent.innerHTML = '<span class="clipboard-empty">Clipboard trên Mac hiện đang trống</span>';
+        }
+      } catch (err) {
+        macClipboardContent.innerHTML = '<span class="clipboard-empty">Lỗi đọc clipboard Mac</span>';
+      }
+    }
+    btnRefreshClipboard.addEventListener('click', loadClipboard);
+
+    btnCopyToPhone.addEventListener('click', async () => {
+      if (!currentMacClipboard) {
+        showToast('Clipboard Mac trống!', '⚠️');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(currentMacClipboard);
+        showToast('Đã copy vào bộ nhớ tạm!', '📋');
+      } catch (err) {
+        showToast('Lỗi khi copy vào điện thoại', '❌');
+      }
+    });
+
+    // --- TAB: MEDIA (PHONE) ---
+    function handleSelectedFiles(files) {
+      pendingFiles = Array.from(files);
+      if (pendingFiles.length === 0) return;
+      selectedFilesContainer.classList.remove('hidden');
+      selectedFilesCount.innerText = `Đã chọn (${pendingFiles.length} file):`;
+      selectedFilesList.innerHTML = pendingFiles.map(f => `
+        <div style="background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 6px; display: flex; justify-content: space-between;">
+          <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 200px;">${f.name}</span>
+          <span style="color: var(--text-muted);">${formatBytes(f.size)}</span>
+        </div>
+      `).join('');
+    }
+
+    if (cameraInput) cameraInput.addEventListener('change', (e) => handleSelectedFiles(e.target.files));
+    if (galleryInput) galleryInput.addEventListener('change', (e) => handleSelectedFiles(e.target.files));
+
+    if (btnUploadFiles) {
+      btnUploadFiles.addEventListener('click', async () => {
+        if (pendingFiles.length === 0) return;
+        btnUploadFiles.disabled = true;
+        btnUploadFiles.innerText = '⏳ Đang chuyển sang Mac...';
+
+        const formData = new FormData();
+        pendingFiles.forEach(f => formData.append('files', f));
+
+        try {
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await res.json();
+          if (res.ok) {
+            showToast(`Đã chuyển ${pendingFiles.length} file vào Downloads Mac!`, '🎉');
+            pendingFiles = [];
+            selectedFilesContainer.classList.add('hidden');
+            if (cameraInput) cameraInput.value = '';
+            if (galleryInput) galleryInput.value = '';
+            loadFiles();
+          } else {
+            showToast(data.error || 'Lỗi gửi file', '❌');
+          }
+        } catch (err) {
+          showToast('Lỗi kết nối khi gửi file', '❌');
+        } finally {
+          btnUploadFiles.disabled = false;
+          btnUploadFiles.innerText = '📤 Gửi ngay sang Mac (Lưu vào Downloads)';
+        }
+      });
+    }
+
+    // --- TAB: FILES LIST ---
+    async function loadFiles() {
+      try {
+        const res = await fetch('/api/files');
+        const data = await res.json();
+        if (!data.files || data.files.length === 0) {
+          const emptyText = isMobile ? 'Chưa có tệp nào từ Mac gửi sang.' : 'Chưa có tệp nào trong thư mục QuickShare.';
+          filesList.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 24px;">${emptyText}</div>`;
+          return;
+        }
+
+        filesList.innerHTML = data.files.map(f => `
+          <div class="file-item">
+            <div class="file-info">
+              <div class="file-icon">${f.is_image ? '🖼️' : '📄'}</div>
+              <div>
+                <div class="file-name" title="${f.name}">${f.name}</div>
+                <div class="file-size">${formatBytes(f.size)}</div>
+              </div>
+            </div>
+            <div class="file-actions">
+              ${f.is_image ? `
+                <button onclick="saveToGallery('${encodeURIComponent(f.name)}')" class="btn btn-sm phone-only" style="background: #2563eb; color: #fff; box-shadow: 0 2px 8px rgba(37,99,235,0.3);" title="Lưu vào Cuộn ảnh / Gallery">
+                  🖼️ Album
+                </button>
+              ` : ''}
+              <button onclick="showFileQr('${encodeURIComponent(f.name)}', '${f.direct_url}')" class="btn btn-secondary btn-sm mac-only" title="Hiện mã QR để điện thoại quét tải thẳng">
+                📱 QR
+              </button>
+              <a href="/api/download/${encodeURIComponent(f.name)}" download="${f.name}" class="btn btn-primary btn-sm" style="text-decoration: none;">
+                📥 Tải
+              </a>
+              <button onclick="deleteFile('${f.name}')" class="btn btn-secondary btn-sm mac-only" style="color: #f87171;">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        filesList.innerHTML = '<div style="text-align: center; color: #f87171; font-size: 13px; padding: 24px;">Không thể tải danh sách file.</div>';
+      }
+    }
+    btnRefreshFiles.addEventListener('click', loadFiles);
+
+    // Show File QR Modal (Mac only)
+    window.showFileQr = function(filename, directUrl) {
+      if (!singleFileModal) return;
+      modalFileTitle.innerText = decodeURIComponent(filename);
+      modalFileQr.innerHTML = '';
+      new QRCode(modalFileQr, {
+        text: directUrl,
+        width: 180,
+        height: 180,
+        colorDark: '#0f172a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      singleFileModal.classList.add('active');
+    };
+
+    if (btnCloseFileModal) btnCloseFileModal.addEventListener('click', () => singleFileModal.classList.remove('active'));
+    if (singleFileModal) {
+      singleFileModal.addEventListener('click', (e) => {
+        if (e.target === singleFileModal) singleFileModal.classList.remove('active');
+      });
+    }
+
+    window.deleteFile = async function(filename) {
+      if (!confirm(`Bạn có chắc muốn xoá file "${filename}" không?`)) return;
+      try {
+        const res = await fetch(`/api/files/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast('Đã xoá file', '🗑️');
+          loadFiles();
+        }
+      } catch (err) {
+        showToast('Lỗi xoá file', '❌');
+      }
+    };
+
+    if (btnOpenFolder) {
+      btnOpenFolder.addEventListener('click', async () => {
+        try {
+          await fetch('/api/open-folder', { method: 'POST' });
+          showToast('Đã mở thư mục Downloads trong Finder!', '📂');
+        } catch (err) {
+          showToast('Không thể mở thư mục', '❌');
+        }
+      });
+    }
+
+    // --- FEATURE 1: Cmd + V (PASTE SCREENSHOT OR TEXT ANYWHERE ON MAC) ---
+    window.addEventListener('paste', async (e) => {
+      if (isMobile) return; // Only for Mac
+
+      const target = e.target;
+      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+      const clipboardData = e.clipboardData || window.clipboardData;
+      if (!clipboardData) return;
+
+      const items = clipboardData.items;
+      let imageFile = null;
+
+      if (items) {
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') !== -1) {
+            const blob = items[i].getAsFile();
+            if (blob) {
+              const ext = items[i].type.split('/')[1] || 'png';
+              const now = new Date();
+              const pad = (n) => String(n).padStart(2, '0');
+              const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+              imageFile = new File([blob], `screenshot_${ts}.${ext}`, { type: items[i].type });
+              break;
+            }
+          }
+        }
+      }
+
+      if (imageFile) {
+        e.preventDefault();
+        const tabInstantBtn = document.querySelector('[data-tab="tab-instant-qr"]');
+        if (tabInstantBtn) tabInstantBtn.click();
+        if (subtabFileMode) subtabFileMode.click();
+        showToast('📸 Đã bắt ảnh chụp màn hình từ Clipboard (Cmd+V)!', '⚡');
+        processInstantFile(imageFile);
+        return;
+      }
+
+      if (!isInput) {
+        const pastedText = clipboardData.getData('text');
+        if (pastedText && pastedText.trim()) {
+          e.preventDefault();
+          const tabInstantBtn = document.querySelector('[data-tab="tab-instant-qr"]');
+          if (tabInstantBtn) tabInstantBtn.click();
+          if (subtabTextMode) subtabTextMode.click();
+          rawTextInput.value = pastedText;
+          btnGenTextQr.click();
+          showToast('📋 Đã dán text từ Clipboard (Cmd+V) và sinh QR!', '⚡');
+        }
+      }
+    });
+
+    // --- FEATURE 2: SAVE DIRECTLY TO GALLERY / CAMERA ROLL (IPHONE & SAMSUNG) ---
+    window.saveToGallery = async function(encodedName) {
+      const filename = decodeURIComponent(encodedName);
+      showToast('Đang xử lý ảnh để lưu vào máy...', '⏳');
+
+      try {
+        const res = await fetch(`/api/download/${encodeURIComponent(filename)}`);
+        const blob = await res.blob();
+        const file = new File([blob], filename, { type: blob.type || 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: filename,
+          });
+          showToast('Đã mở bảng lưu ảnh vào Album!', '🎉');
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast('Đã tải ảnh về máy thành công!', '📥');
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          showToast('Lỗi khi lưu ảnh: ' + err.message, '❌');
+        }
+      }
+    };
+
+    // Start
+    loadInfo();
+    loadClipboard();
+    setInterval(loadClipboard, 5000);
+  </script>
+</body>
+</html>
