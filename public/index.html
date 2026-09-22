@@ -700,14 +700,20 @@
     <!-- TAB 4: FILES LIST (SHARED FILES & DOWNLOADS) -->
     <div id="tab-files" class="tab-content hidden">
       <div class="card">
-        <div class="card-header">
-          <div class="card-title">
-            <span class="phone-only">📂 Tệp từ Mac gửi sang</span>
-            <span class="mac-only">📂 Thư mục QuickShare (~/Downloads)</span>
+        <div class="card-header" style="flex-wrap: wrap; gap: 8px;">
+          <div class="card-title" style="flex: 1; min-width: 200px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span class="phone-only">📂 Tệp từ máy tính gửi sang</span>
+              <span class="mac-only">📂 Tệp QuickShare</span>
+            </div>
+            <div class="mac-only" style="font-size: 11px; color: var(--text-muted); font-weight: normal; margin-top: 2px;">
+              Lưu tại: <span id="storage-dir-path" style="color: var(--primary); font-family: monospace;">~/Downloads/QuickShare</span>
+            </div>
           </div>
-          <div style="display: flex; gap: 6px;">
-            <button id="btn-open-folder" class="btn btn-secondary btn-sm mac-only" title="Mở Finder trên Mac">📁 Finder</button>
-            <button id="btn-refresh-files" class="btn btn-secondary btn-sm">🔄</button>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button id="btn-change-folder" class="btn btn-secondary btn-sm mac-only" title="Đổi thư mục lưu trữ">⚙️ Đổi folder</button>
+            <button id="btn-open-folder" class="btn btn-secondary btn-sm mac-only" title="Mở thư mục trên máy">📁 Mở thư mục</button>
+            <button id="btn-refresh-files" class="btn btn-secondary btn-sm" title="Làm mới">🔄</button>
           </div>
         </div>
 
@@ -719,8 +725,8 @@
 
     <!-- Footer -->
     <div class="desktop-hint">
-      <span class="mac-only">Đang chạy trên <b>Mac</b> • Thư mục lưu: <b>~/Downloads/QuickShare</b></span>
-      <span class="phone-only">Đã kết nối với <b>Mac</b> qua mạng Wi-Fi nội bộ</span>
+      <span class="mac-only">Đang chạy trên <b>máy chủ QuickShare</b> • Thư mục: <b id="footer-storage-path">~/Downloads/QuickShare</b></span>
+      <span class="phone-only">Đã kết nối với <b>máy tính</b> qua mạng Wi-Fi nội bộ</span>
     </div>
   </div>
 
@@ -797,6 +803,44 @@
         <button id="btn-close-tunnel-modal" class="btn btn-secondary" style="width: 100%;">
           Đóng
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Change Storage Folder -->
+  <div id="storage-modal" class="modal-overlay">
+    <div class="modal-card" style="max-width: 460px; text-align: left;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+          <span>⚙️</span> Thư mục lưu trữ
+        </div>
+        <button id="btn-close-storage-modal" class="btn-close" style="background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer;">&times;</button>
+      </div>
+      <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
+        Tất cả ảnh và tệp nhận từ điện thoại sẽ được lưu trực tiếp vào thư mục này. Bạn có thể đổi sang bất kỳ thư mục nào trên máy:
+      </p>
+
+      <div style="margin-bottom: 12px;">
+        <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">
+          Đường dẫn thư mục:
+        </label>
+        <input type="text" id="input-storage-dir" placeholder="ví dụ: ~/Desktop/QuickShare" style="width: 100%; box-sizing: border-box; padding: 10px 12px; font-family: monospace; font-size: 13px; border-radius: 10px; background: var(--input-bg); border: 1px solid var(--input-border); color: #fff; outline: none;">
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 6px;">Gợi ý nhanh:</div>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-secondary btn-sm storage-preset-btn" data-path="~/Downloads/QuickShare">Downloads (Mặc định)</button>
+          <button type="button" class="btn btn-secondary btn-sm storage-preset-btn" data-path="~/Desktop/QuickShare">Desktop</button>
+          <button type="button" class="btn btn-secondary btn-sm storage-preset-btn" data-path="~/Documents/QuickShare">Documents</button>
+        </div>
+      </div>
+
+      <div id="storage-status-msg" style="display: none; font-size: 12px; margin-bottom: 12px; padding: 8px 12px; border-radius: 8px;"></div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button id="btn-cancel-storage" class="btn btn-secondary">Hủy</button>
+        <button id="btn-save-storage" class="btn btn-primary" style="background: #2563eb;">Lưu & Áp dụng</button>
       </div>
     </div>
   </div>
@@ -1320,12 +1364,99 @@
       btnOpenFolder.addEventListener('click', async () => {
         try {
           await apiFetch('/api/open-folder', { method: 'POST' });
-          showToast('Đã mở thư mục Downloads trong Finder!', '📂');
+          showToast('Đã mở thư mục lưu trữ trên máy!', '📂');
         } catch (err) {
           showToast('Không thể mở thư mục', '❌');
         }
       });
     }
+
+    // --- FEATURE: CONFIGURABLE STORAGE FOLDER ---
+    const storageDirPath = document.getElementById('storage-dir-path');
+    const footerStoragePath = document.getElementById('footer-storage-path');
+    const storageModal = document.getElementById('storage-modal');
+    const btnChangeFolder = document.getElementById('btn-change-folder');
+    const btnCloseStorageModal = document.getElementById('btn-close-storage-modal');
+    const btnCancelStorage = document.getElementById('btn-cancel-storage');
+    const btnSaveStorage = document.getElementById('btn-save-storage');
+    const inputStorageDir = document.getElementById('input-storage-dir');
+    const storageStatusMsg = document.getElementById('storage-status-msg');
+    const storagePresetBtns = document.querySelectorAll('.storage-preset-btn');
+
+    async function loadStorageSettings() {
+      if (isMobile) return;
+      try {
+        const data = await apiFetch('/api/settings/storage');
+        if (data && data.current_dir) {
+          if (storageDirPath) storageDirPath.innerText = data.current_dir;
+          if (footerStoragePath) footerStoragePath.innerText = data.current_dir;
+          if (inputStorageDir) inputStorageDir.value = data.current_dir;
+        }
+      } catch (err) {}
+    }
+
+    if (btnChangeFolder) {
+      btnChangeFolder.addEventListener('click', () => {
+        loadStorageSettings();
+        if (storageStatusMsg) storageStatusMsg.style.display = 'none';
+        if (storageModal) storageModal.style.display = 'flex';
+      });
+    }
+
+    if (btnCloseStorageModal) {
+      btnCloseStorageModal.addEventListener('click', () => {
+        if (storageModal) storageModal.style.display = 'none';
+      });
+    }
+
+    if (btnCancelStorage) {
+      btnCancelStorage.addEventListener('click', () => {
+        if (storageModal) storageModal.style.display = 'none';
+      });
+    }
+
+    storagePresetBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const pathVal = btn.getAttribute('data-path');
+        if (inputStorageDir) inputStorageDir.value = pathVal;
+      });
+    });
+
+    if (btnSaveStorage) {
+      btnSaveStorage.addEventListener('click', async () => {
+        const newDir = inputStorageDir.value.trim();
+        if (!newDir) {
+          showToast('Vui lòng nhập đường dẫn thư mục', '⚠️');
+          return;
+        }
+        btnSaveStorage.disabled = true;
+        btnSaveStorage.innerText = 'Đang lưu...';
+        try {
+          const res = await apiFetch('/api/settings/storage', {
+            method: 'POST',
+            body: JSON.stringify({ dir: newDir }),
+          });
+          if (res && res.status === 'ok') {
+            if (storageDirPath) storageDirPath.innerText = res.current_dir;
+            if (footerStoragePath) footerStoragePath.innerText = res.current_dir;
+            showToast(`Đã đổi thư mục lưu sang: ${res.current_dir}`, '📂');
+            if (storageModal) storageModal.style.display = 'none';
+            fetchFiles();
+          }
+        } catch (err) {
+          if (storageStatusMsg) {
+            storageStatusMsg.style.display = 'block';
+            storageStatusMsg.style.background = 'rgba(239, 68, 68, 0.15)';
+            storageStatusMsg.style.color = '#ef4444';
+            storageStatusMsg.innerText = err.message || 'Lỗi khi đổi thư mục';
+          }
+        } finally {
+          btnSaveStorage.disabled = false;
+          btnSaveStorage.innerText = 'Lưu & Áp dụng';
+        }
+      });
+    }
+    loadStorageSettings();
 
     // --- FEATURE 1: Cmd + V (PASTE SCREENSHOT OR TEXT ANYWHERE ON MAC) ---
     window.addEventListener('paste', async (e) => {

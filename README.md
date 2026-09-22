@@ -187,12 +187,34 @@ QuickShare is engineered for zero bloat, streaming I/O, and low latency. You can
 
 ---
 
-## 📂 File Storage
-By default, all uploaded photos and files sent from mobile devices are saved directly to:
+## 📂 File Storage & Custom Directory
+
+By default, files and photos sent from mobile devices are saved to:
 ```
 ~/Downloads/QuickShare
 ```
-The Mac web interface includes a **Finder** button to open this directory instantly in macOS Finder.
+
+You can change this storage folder at any time using any of the following methods:
+
+### 1. Change via Web UI (Easiest)
+On your computer dashboard (`http://localhost:5050`), click the **`⚙️ Đổi folder`** button in the files section. You can enter any custom path (e.g. `~/Desktop/SharedFolder` or `D:\QuickShare`) or pick a preset. The server updates the path immediately without restarting!
+
+### 2. Change via CLI Parameter
+Launch QuickShare with the `--dir` (or `-d`) flag:
+```bash
+quickshare --dir ~/Desktop/MyFiles
+# or with npx
+npx @ngocbaongo/quickshare --dir ~/Desktop/MyFiles
+```
+
+### 3. Change via Environment Variable
+```bash
+export QUICKSHARE_DIR=~/Desktop/MyFiles
+quickshare
+```
+
+> **Persistent Configuration:** Custom paths saved through the Web UI are stored in `~/.quickshare/config.json` and persist across server restarts.
+> **Security:** Changing storage folders is strictly restricted to the local host machine. Public visitors accessing via Cloudflare Tunnel cannot query or alter filesystem paths.
 
 ---
 

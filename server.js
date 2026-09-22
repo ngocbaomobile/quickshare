@@ -27,10 +27,93 @@ function getCloudflaredBin() {
   return 'cloudflared';
 }
 
-// Setup directories
-const DOWNLOADS_DIR = path.join(os.homedir(), 'Downloads', 'QuickShare');
-if (!fs.existsSync(DOWNLOADS_DIR)) {
-  fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
+// Configuration & Storage Directory Setup
+const CONFIG_DIR = path.join(os.homedir(), '.quickshare');
+const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
+const DEFAULT_DOWNLOADS_DIR = path.join(os.homedir(), 'Downloads', 'QuickShare');
+
+function resolvePath(inputPath) {
+  if (!inputPath || typeof inputPath !== 'string') return DEFAULT_DOWNLOADS_DIR;
+  let p = inputPath.trim();
+  if (p.startsWith('~/') || p === '~') {
+    p = path.join(os.homedir(), p.slice(1));
+  }
+  return path.resolve(p);
+}
+
+function loadConfig() {
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      const data = fs.readFileSync(CONFIG_FILE, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (err) {}
+  return {};
+}
+
+function saveConfig(cfg) {
+  try {
+    if (!fs.existsSync(CONFIG_DIR)) {
+      fs.mkdirSync(CONFIG_DIR, { recursive: true });
+    }
+    const current = loadConfig();
+    const merged = { ...current, ...cfg };
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(merged, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.error('Failed to save config:', err);
+    return false;
+  }
+}
+
+// Parse CLI flag --dir or -d
+function parseCliDir() {
+  const args = process.argv.slice(2);
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--dir' || args[i] === '-d') {
+      if (args[i + 1] && !args[i + 1].startsWith('-')) {
+        return resolvePath(args[i + 1]);
+      }
+    } else if (args[i].startsWith('--dir=')) {
+      return resolvePath(args[i].split('=')[1]);
+    }
+  }
+  return null;
+}
+
+function ensureDirectoryExists(dirPath) {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+}
+
+function initDownloadsDir() {
+  const cliDir = parseCliDir();
+  if (cliDir) return cliDir;
+  if (process.env.QUICKSHARE_DIR) {
+    return resolvePath(process.env.QUICKSHARE_DIR);
+  }
+  const cfg = loadConfig();
+  if (cfg.downloadsDir) {
+    return resolvePath(cfg.downloadsDir);
+  }
+  return DEFAULT_DOWNLOADS_DIR;
+}
+
+let activeDownloadsDir = initDownloadsDir();
+ensureDirectoryExists(activeDownloadsDir);
+
+function getDownloadsDir() {
+  return activeDownloadsDir;
+}
+
+function setDownloadsDir(newPath) {
+  const resolved = resolvePath(newPath);
+  ensureDirectoryExists(resolved);
+  fs.accessSync(resolved, fs.constants.W_OK);
+  activeDownloadsDir = resolved;
+  saveConfig({ downloadsDir: resolved });
+  return resolved;
 }
 
 // In-memory text history
@@ -225,7 +308,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Configure Multer storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, DOWNLOADS_DIR);
+    const dir = getDownloadsDir();
+    ensureDirectoryExists(dir);
+    cb(null, dir);
   },
   filename: function (req, file, cb) {
     const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
@@ -233,7 +318,8 @@ const storage = multer.diskStorage({
     const base = path.basename(originalName, ext);
     let targetName = originalName;
     let counter = 1;
-    while (fs.existsSync(path.join(DOWNLOADS_DIR, targetName))) {
+    const dir = getDownloadsDir();
+    while (fs.existsSync(path.join(dir, targetName))) {
       targetName = `${base}_${counter}${ext}`;
       counter++;
     }
@@ -250,7 +336,8 @@ app.get('/api/info', (req, res) => {
     local_ip: ip,
     port: PORT,
     url: `http://${ip}:${PORT}`,
-    downloads_dir: DOWNLOADS_DIR,
+    downloads_dir: getDownloadsDir(),
+    default_dir: DEFAULT_DOWNLOADS_DIR,
     platform: process.platform,
     is_public: isPublic,
     public_active: !!publicUrl,
@@ -368,7 +455,9 @@ app.post('/api/quick-qr-file', upload.single('file'), (req, res) => {
 // API: List Files in QuickShare folder
 app.get('/api/files', (req, res) => {
   try {
-    const files = fs.readdirSync(DOWNLOADS_DIR);
+    const dir = getDownloadsDir();
+    ensureDirectoryExists(dir);
+    const files = fs.readdirSync(dir);
     const imageExts = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg', '.bmp', '.heic']);
     const ip = getLocalIp();
     const baseUrl = publicUrl || `http://${ip}:${PORT}`;
@@ -377,7 +466,7 @@ app.get('/api/files', (req, res) => {
     const list = files
       .filter((f) => !f.startsWith('.'))
       .map((name) => {
-        const fullPath = path.join(DOWNLOADS_DIR, name);
+        const fullPath = path.join(dir, name);
         const stat = fs.statSync(fullPath);
         return {
           name,
@@ -397,7 +486,7 @@ app.get('/api/files', (req, res) => {
 // API: Direct Download with attachment headers
 app.get('/api/direct-download/:filename', (req, res) => {
   const filename = path.basename(req.params.filename);
-  const filePath = path.join(DOWNLOADS_DIR, filename);
+  const filePath = path.join(getDownloadsDir(), filename);
   if (!fs.existsSync(filePath)) {
     return res.status(404).send('File not found');
   }
@@ -413,7 +502,7 @@ app.get('/api/direct-download/:filename', (req, res) => {
 // API: Standard Download
 app.get('/api/download/:filename', (req, res) => {
   const filename = path.basename(req.params.filename);
-  const filePath = path.join(DOWNLOADS_DIR, filename);
+  const filePath = path.join(getDownloadsDir(), filename);
   if (fs.existsSync(filePath)) {
     res.download(filePath, filename);
   } else {
@@ -424,7 +513,7 @@ app.get('/api/download/:filename', (req, res) => {
 // API: Delete a file (Local Only)
 app.delete('/api/files/:filename', (req, res) => {
   const filename = path.basename(req.params.filename);
-  const filePath = path.join(DOWNLOADS_DIR, filename);
+  const filePath = path.join(getDownloadsDir(), filename);
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath);
     res.json({ status: 'ok' });
@@ -433,13 +522,45 @@ app.delete('/api/files/:filename', (req, res) => {
   }
 });
 
+// API: Get Storage Settings (Local Host Only)
+app.get('/api/settings/storage', (req, res) => {
+  if (isPublicRequest(req)) {
+    return res.status(403).json({ error: 'Access restricted for public visitors' });
+  }
+  res.json({
+    current_dir: getDownloadsDir(),
+    default_dir: DEFAULT_DOWNLOADS_DIR,
+    homedir: os.homedir(),
+  });
+});
+
+// API: Update Storage Directory (Local Host Only)
+app.post('/api/settings/storage', (req, res) => {
+  if (isPublicRequest(req)) {
+    return res.status(403).json({ error: 'Changing storage path is forbidden for public visitors' });
+  }
+  const { dir } = req.body;
+  if (!dir || typeof dir !== 'string') {
+    return res.status(400).json({ error: 'Directory path is required' });
+  }
+  try {
+    const updated = setDownloadsDir(dir);
+    notifyOS('QuickShare', `Thư mục lưu đổi thành: ${path.basename(updated)}`);
+    res.json({ status: 'ok', current_dir: updated });
+  } catch (err) {
+    return res.status(400).json({ error: `Cannot use directory: ${err.message}` });
+  }
+});
+
 // API: Open Downloads folder in macOS Finder or Windows Explorer (Local Only)
 app.post('/api/open-folder', (req, res) => {
+  const dir = getDownloadsDir();
+  ensureDirectoryExists(dir);
   if (process.platform === 'darwin') {
-    spawn('open', [DOWNLOADS_DIR]);
+    spawn('open', [dir]);
     res.json({ status: 'ok' });
   } else if (process.platform === 'win32') {
-    spawn('explorer.exe', [DOWNLOADS_DIR]);
+    spawn('explorer.exe', [dir]);
     res.json({ status: 'ok' });
   } else {
     res.status(400).json({ error: 'Unsupported operating system for folder opening' });
@@ -456,7 +577,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('======================================================');
   console.log(`📡 Local URL:      \x1b[36m${url}\x1b[0m`);
   console.log(`💻 Open on Host:   \x1b[32mhttp://localhost:${PORT}\x1b[0m`);
-  console.log(`📂 Downloads Dir:  \x1b[33m${DOWNLOADS_DIR}\x1b[0m\n`);
+  console.log(`📂 Downloads Dir:  \x1b[33m${getDownloadsDir()}\x1b[0m\n`);
   console.log('📱 Scan QR code below with iPhone or Samsung Camera:');
   console.log('------------------------------------------------------');
   qrcode.generate(url, { small: true });
