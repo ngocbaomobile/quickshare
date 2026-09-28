@@ -100,6 +100,7 @@
     const textInput = document.getElementById('text-input');
     const btnSendText = document.getElementById('btn-send-text');
     const btnPastePhone = document.getElementById('btn-paste-phone');
+    const btnPasteSend = document.getElementById('btn-paste-send');
     const macClipboardContent = document.getElementById('mac-clipboard-content');
     const btnRefreshClipboard = document.getElementById('btn-refresh-clipboard');
     const btnCopyToPhone = document.getElementById('btn-copy-to-phone');
@@ -372,8 +373,8 @@
     }
 
     // --- TAB: TEXT & CLIPBOARD SYNC ---
-    btnSendText.addEventListener('click', async () => {
-      const text = textInput.value.trim();
+    async function sendText(rawText) {
+      const text = rawText.trim();
       if (!text) {
         showToast(tr('toast.enter_text', 'Vui lòng nhập văn bản cần gửi!'), '⚠️');
         return;
@@ -398,7 +399,23 @@
       } finally {
         btnSendText.disabled = false;
       }
-    });
+    }
+    btnSendText.addEventListener('click', () => sendText(textInput.value));
+
+    // One tap: read the phone clipboard and send it, instead of tap box -> paste -> send.
+    // Browsers only expose clipboard reads on https/localhost; elsewhere fall back to manual paste.
+    if (btnPasteSend) {
+      btnPasteSend.addEventListener('click', async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          textInput.value = text;
+          await sendText(text);
+        } catch (err) {
+          textInput.focus();
+          showToast(tr('toast.paste_direct_hint', 'Hãy dán trực tiếp vào ô văn bản'), '💡');
+        }
+      });
+    }
 
     if (btnPastePhone) {
       btnPastePhone.addEventListener('click', async () => {
