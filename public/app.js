@@ -419,7 +419,7 @@
         const data = await res.json();
         currentMacClipboard = data.text || '';
         if (currentMacClipboard) {
-          macClipboardContent.innerText = currentMacClipboard;
+          macClipboardContent.innerHTML = renderTextOrLink(currentMacClipboard);
         } else {
           macClipboardContent.innerHTML = `<span class="clipboard-empty">${tr('text.mac_clip_empty', 'Clipboard trên Mac hiện đang trống')}</span>`;
         }
@@ -443,6 +443,15 @@
 
     function escapeHtml(str) {
       return str.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // Text that is a single http(s) URL becomes a link that opens in a new tab.
+    // Only http/https are matched, so javascript: and other schemes stay plain text.
+    function renderTextOrLink(text) {
+      const safe = escapeHtml(text);
+      const trimmed = text.trim();
+      if (!/^https?:\/\/\S+$/i.test(trimmed)) return safe;
+      return `<a class="text-link" href="${escapeHtml(trimmed)}" target="_blank" rel="noopener noreferrer">${safe}</a>`;
     }
 
     async function loadHistory(force = false) {
@@ -487,7 +496,7 @@
         const pinTitle = h.pinned ? tr('history.btn_unpin', 'Bỏ ghim') : tr('history.btn_pin', 'Ghim');
         return `
           <div class="history-item${h.pinned ? ' pinned' : ''}" data-id="${h.id}">
-            <div class="history-text">${escapeHtml(h.text)}</div>
+            <div class="history-text">${renderTextOrLink(h.text)}</div>
             <div class="history-footer">
               <span class="history-meta">${fromPhone ? '📱' : '💻'} ${source} • ${new Date(h.created_at).toLocaleString(locale)}</span>
               <div class="history-actions">

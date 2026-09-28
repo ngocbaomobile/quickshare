@@ -1015,3 +1015,13 @@ kbd {
   font-size: 13px;
   padding: 24px;
 }
+
+.text-link {
+  color: var(--accent-cyan);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.text-link:hover {
+  color: #67e8f9;
+}
