@@ -1025,3 +1025,18 @@ kbd {
 .text-link:hover {
   color: #67e8f9;
 }
+
+.auto-send-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.auto-send-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}

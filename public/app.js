@@ -402,6 +402,29 @@
     }
     btnSendText.addEventListener('click', () => sendText(textInput.value));
 
+    function showPasteFallbackHint() {
+      // Insecure (plain http) pages can never read the clipboard, so say why instead of a generic hint.
+      const key = window.isSecureContext ? 'toast.paste_direct_hint' : 'toast.paste_blocked_hint';
+      showToast(tr(key, 'Hãy dán trực tiếp vào ô văn bản'), '💡');
+    }
+
+    // Optional: send as soon as text is pasted into the box (works on http too, unlike readText).
+    const autoSendPaste = document.getElementById('auto-send-paste');
+    if (autoSendPaste) {
+      autoSendPaste.checked = localStorage.getItem('quickshare_auto_send_paste') === '1';
+      autoSendPaste.addEventListener('change', () => {
+        localStorage.setItem('quickshare_auto_send_paste', autoSendPaste.checked ? '1' : '0');
+      });
+      textInput.addEventListener('paste', (e) => {
+        if (!autoSendPaste.checked) return;
+        const text = e.clipboardData && e.clipboardData.getData('text');
+        if (!text || !text.trim()) return;
+        e.preventDefault();
+        textInput.value = text;
+        sendText(text);
+      });
+    }
+
     // One tap: read the phone clipboard and send it, instead of tap box -> paste -> send.
     // Browsers only expose clipboard reads on https/localhost; elsewhere fall back to manual paste.
     if (btnPasteSend) {
@@ -412,7 +435,7 @@
           await sendText(text);
         } catch (err) {
           textInput.focus();
-          showToast(tr('toast.paste_direct_hint', 'Hãy dán trực tiếp vào ô văn bản'), '💡');
+          showPasteFallbackHint();
         }
       });
     }
@@ -425,7 +448,7 @@
           showToast(tr('toast.paste_phone', 'Đã dán text từ điện thoại!'), '📋');
         } catch (err) {
           textInput.focus();
-          showToast(tr('toast.paste_direct_hint', 'Hãy dán trực tiếp vào ô văn bản'), '💡');
+          showPasteFallbackHint();
         }
       });
     }
