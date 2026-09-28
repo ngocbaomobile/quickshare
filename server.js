@@ -195,11 +195,15 @@ function getLocalIp() {
   return '127.0.0.1';
 }
 
+// pbpaste/pbcopy encode by locale. A daemon started without LANG (launchd, some
+// shells) falls back to ASCII and turns every non-ASCII character into "?".
+const MAC_CLIPBOARD_ENV = { ...process.env, LANG: 'en_US.UTF-8', LC_ALL: 'en_US.UTF-8' };
+
 // Helper: Read OS clipboard (macOS & Windows)
 function getSystemClipboard() {
   try {
     if (process.platform === 'darwin') {
-      return execSync('pbpaste', { encoding: 'utf-8', timeout: 2000 });
+      return execSync('pbpaste', { encoding: 'utf-8', timeout: 2000, env: MAC_CLIPBOARD_ENV });
     } else if (process.platform === 'win32') {
       return execSync('powershell.exe -NoProfile -Command "Get-Clipboard"', { encoding: 'utf-8', timeout: 2500 });
     }
@@ -213,7 +217,7 @@ function getSystemClipboard() {
 function setSystemClipboard(text) {
   try {
     if (process.platform === 'darwin') {
-      const proc = spawn('pbcopy');
+      const proc = spawn('pbcopy', { env: MAC_CLIPBOARD_ENV });
       proc.stdin.write(text, 'utf-8');
       proc.stdin.end();
       return true;
