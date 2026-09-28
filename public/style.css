@@ -931,3 +931,87 @@ kbd {
 .hidden {
   display: none !important;
 }
+
+/* Clipboard history */
+.history-card {
+  margin-top: 24px;
+}
+
+.history-add {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.history-add textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 60px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 460px;
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+}
+
+.history-item.pinned {
+  border-color: var(--card-border-glow);
+}
+
+.history-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.history-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.history-meta {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.history-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.history-actions .btn.is-pinned {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary-glow);
+}
+
+.history-edit-input {
+  width: 100%;
+}
+
+.history-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 24px;
+}

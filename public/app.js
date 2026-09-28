@@ -82,6 +82,7 @@
       loadFiles();
       loadInfo();
       loadClipboard();
+      loadHistory(true);
       checkTunnelStatus();
     });
 
@@ -425,8 +426,147 @@
       } catch (err) {
         macClipboardContent.innerHTML = `<span class="clipboard-empty">${tr('text.mac_clip_err', 'Lỗi đọc clipboard Mac')}</span>`;
       }
+      // Reading the clipboard is what records it into history, so refresh after.
+      await loadHistory();
     }
     btnRefreshClipboard.addEventListener('click', loadClipboard);
+
+    // --- Clipboard history ---
+    const historyCard = document.getElementById('history-card');
+    const historyList = document.getElementById('history-list');
+    const historyNewInput = document.getElementById('history-new-input');
+    const btnAddHistory = document.getElementById('btn-add-history');
+    const btnClearHistory = document.getElementById('btn-clear-history');
+    let historyItems = [];
+    let editingHistoryId = null;
+    let lastHistoryJson = '';
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    async function loadHistory(force = false) {
+      // Re-rendering would wipe an in-progress edit.
+      if (editingHistoryId) return;
+      try {
+        const res = await apiFetch('/api/history');
+        if (res.status === 403) {
+          // History is disabled on public (tunnel) connections.
+          historyCard.classList.add('hidden');
+          return;
+        }
+        if (!res.ok) return;
+        const data = await res.json();
+        historyItems = data.history || [];
+        const json = JSON.stringify(historyItems);
+        if (!force && json === lastHistoryJson) return;
+        lastHistoryJson = json;
+        renderHistory();
+      } catch (err) {}
+    }
+
+    function renderHistory() {
+      if (historyItems.length === 0) {
+        historyList.innerHTML = `<div class="history-empty">${tr('history.empty', 'Chưa có lịch sử.')}</div>`;
+        return;
+      }
+      const locale = (window.currentLang && window.currentLang()) || 'vi';
+      historyList.innerHTML = historyItems.map((h) => {
+        if (h.id === editingHistoryId) {
+          return `
+            <div class="history-item" data-id="${h.id}">
+              <textarea class="history-edit-input">${escapeHtml(h.text)}</textarea>
+              <div class="history-actions">
+                <button class="btn btn-secondary btn-sm" data-action="cancel">${tr('history.btn_cancel', 'Huỷ')}</button>
+                <button class="btn btn-primary btn-sm" data-action="save">${tr('history.btn_save', 'Lưu')}</button>
+              </div>
+            </div>`;
+        }
+        const fromPhone = h.source === 'phone';
+        const source = fromPhone ? tr('history.phone', 'Điện thoại') : tr('history.computer', 'Máy tính');
+        const pinTitle = h.pinned ? tr('history.btn_unpin', 'Bỏ ghim') : tr('history.btn_pin', 'Ghim');
+        return `
+          <div class="history-item${h.pinned ? ' pinned' : ''}" data-id="${h.id}">
+            <div class="history-text">${escapeHtml(h.text)}</div>
+            <div class="history-footer">
+              <span class="history-meta">${fromPhone ? '📱' : '💻'} ${source} • ${new Date(h.created_at).toLocaleString(locale)}</span>
+              <div class="history-actions">
+                <button class="btn btn-secondary btn-sm${h.pinned ? ' is-pinned' : ''}" data-action="pin" title="${pinTitle}">📌</button>
+                <button class="btn btn-secondary btn-sm" data-action="copy" title="${tr('history.btn_copy', 'Sao chép')}">📋</button>
+                <button class="btn btn-secondary btn-sm" data-action="edit" title="${tr('history.btn_edit', 'Sửa')}">✏️</button>
+                <button class="btn btn-secondary btn-sm" data-action="delete" style="color: #f87171;" title="${tr('history.btn_delete', 'Xoá')}">🗑️</button>
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // Resolves to whether the request succeeded, so callers only reset input on success.
+    async function historyRequest(url, method, body) {
+      try {
+        const res = await apiFetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: body ? JSON.stringify(body) : undefined,
+        });
+        if (res.ok) return true;
+      } catch (err) {}
+      showToast(tr('history.err', 'Không thể cập nhật lịch sử'), '❌');
+      return false;
+    }
+
+    historyList.addEventListener('click', async (e) => {
+      const btn = e.target.closest('[data-action]');
+      const itemEl = e.target.closest('.history-item');
+      if (!btn || !itemEl) return;
+      const id = itemEl.dataset.id;
+      const item = historyItems.find((h) => h.id === id);
+      if (!item) return;
+
+      switch (btn.dataset.action) {
+        case 'copy':
+          if (await copyToClipboard(item.text)) showToast(tr('toast.copied', 'Đã sao chép vào clipboard!'), '📋');
+          break;
+        case 'pin':
+          if (await historyRequest(`/api/history/${id}`, 'PATCH', { pinned: !item.pinned })) loadHistory(true);
+          break;
+        case 'delete':
+          if (await historyRequest(`/api/history/${id}`, 'DELETE')) loadHistory(true);
+          break;
+        case 'edit':
+          editingHistoryId = id;
+          renderHistory();
+          itemEl.parentElement.querySelector('.history-edit-input')?.focus();
+          break;
+        case 'cancel':
+          editingHistoryId = null;
+          loadHistory(true);
+          break;
+        case 'save': {
+          const text = itemEl.querySelector('.history-edit-input').value;
+          if (!text.trim()) return;
+          if (await historyRequest(`/api/history/${id}`, 'PATCH', { text })) {
+            editingHistoryId = null;
+            loadHistory(true);
+          }
+          break;
+        }
+      }
+    });
+
+    btnAddHistory.addEventListener('click', async () => {
+      const text = historyNewInput.value;
+      if (!text.trim()) return;
+      if (await historyRequest('/api/history', 'POST', { text })) {
+        historyNewInput.value = '';
+        loadHistory(true);
+      }
+    });
+
+    btnClearHistory.addEventListener('click', async () => {
+      if (!confirm(tr('history.confirm_clear', 'Xoá toàn bộ lịch sử (các mục đã ghim sẽ được giữ lại)?'))) return;
+      if (await historyRequest('/api/history', 'DELETE')) loadHistory(true);
+    });
 
     async function copyToClipboard(text) {
       if (!text) return false;

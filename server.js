@@ -5,6 +5,7 @@ const qrcode = require('qrcode-terminal');
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { execSync, spawn } = require('child_process');
 
 const app = express();
@@ -116,8 +117,54 @@ function setDownloadsDir(newPath) {
   return resolved;
 }
 
-// In-memory text history
-let textHistory = [];
+// Clipboard history, newest first. Persisted so it survives restarts.
+const HISTORY_FILE = path.join(CONFIG_DIR, 'history.json');
+const HISTORY_MAX = 100;
+const HISTORY_TEXT_MAX = 20000;
+
+function loadHistory() {
+  try {
+    const items = JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf-8'));
+    return Array.isArray(items) ? items : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+function saveHistory() {
+  try {
+    fs.mkdirSync(CONFIG_DIR, { recursive: true });
+    // Write-then-rename so a crash mid-write never leaves a truncated file.
+    const tmp = `${HISTORY_FILE}.tmp`;
+    fs.writeFileSync(tmp, JSON.stringify(textHistory));
+    fs.renameSync(tmp, HISTORY_FILE);
+  } catch (err) {}
+}
+
+let textHistory = loadHistory();
+// Last clipboard value already handled, so deleting an entry that is still on
+// the clipboard doesn't make the next poll re-add it.
+let lastSeenClipboard = null;
+
+function addHistory(text, source) {
+  text = String(text || '').slice(0, HISTORY_TEXT_MAX);
+  if (!text.trim()) return null;
+  if (textHistory[0] && textHistory[0].text === text) return textHistory[0];
+  const entry = {
+    id: crypto.randomBytes(6).toString('hex'),
+    text,
+    source,
+    created_at: Date.now(),
+    pinned: false,
+  };
+  textHistory.unshift(entry);
+  // Trim the oldest unpinned entries; pinned ones never expire.
+  for (let i = textHistory.length - 1; i >= 0 && textHistory.length > HISTORY_MAX; i--) {
+    if (!textHistory[i].pinned) textHistory.splice(i, 1);
+  }
+  saveHistory();
+  return entry;
+}
 
 // Cloudflare Tunnel State
 let tunnelProcess = null;
@@ -286,7 +333,7 @@ app.use((req, res, next) => {
     if (req.path.startsWith('/api/tunnel/') && req.path !== '/api/tunnel/verify-pin') {
       return res.status(403).json({ error: 'Action not allowed on public connection' });
     }
-    if (req.path === '/api/open-folder' || (req.method === 'DELETE' && req.path.startsWith('/api/files/'))) {
+    if (req.path === '/api/open-folder' || req.path.startsWith('/api/history') || (req.method === 'DELETE' && req.path.startsWith('/api/files/'))) {
       return res.status(403).json({ error: 'Feature disabled on public connection' });
     }
 
@@ -394,6 +441,14 @@ app.get('/api/tunnel/status', (req, res) => {
 // API: Read System Clipboard
 app.get('/api/clipboard', (req, res) => {
   const text = getSystemClipboard();
+  // The web UI polls this endpoint, so it doubles as the auto-record hook for
+  // anything copied on this machine.
+  if (text !== lastSeenClipboard) {
+    // After a restart, don't re-add text that is already somewhere in the saved history.
+    const isFirstRead = lastSeenClipboard === null;
+    lastSeenClipboard = text;
+    if (!(isFirstRead && textHistory.some((h) => h.text === text))) addHistory(text, 'computer');
+  }
   res.json({ text });
 });
 
@@ -404,13 +459,8 @@ app.post('/api/clipboard', (req, res) => {
     return res.status(400).json({ error: 'Text content is empty' });
   }
   setSystemClipboard(text);
-  
-  textHistory.unshift({
-    id: Date.now().toString(),
-    text,
-    created_at: new Date().toLocaleTimeString('en-US'),
-  });
-  if (textHistory.length > 20) textHistory.pop();
+  lastSeenClipboard = text;
+  addHistory(text, 'phone');
 
   const preview = text.length > 40 ? text.slice(0, 40) + '...' : text;
   const source = isPublicRequest(req) ? 'Internet' : 'Local Wi-Fi';
@@ -420,7 +470,51 @@ app.post('/api/clipboard', (req, res) => {
 
 // API: Get Text History
 app.get('/api/history', (req, res) => {
-  res.json({ history: textHistory });
+  // Stable sort keeps newest-first order within pinned / unpinned groups.
+  const history = [...textHistory].sort((a, b) => Number(b.pinned) - Number(a.pinned));
+  res.json({ history });
+});
+
+// API: Add a history entry manually
+app.post('/api/history', (req, res) => {
+  const text = req.body.text;
+  if (typeof text !== 'string' || !text.trim() || text.length > HISTORY_TEXT_MAX) {
+    return res.status(400).json({ error: 'Invalid text' });
+  }
+  res.status(201).json(addHistory(text, 'computer'));
+});
+
+// API: Edit text and/or pin state of a history entry
+app.patch('/api/history/:id', (req, res) => {
+  const item = textHistory.find((h) => h.id === req.params.id);
+  if (!item) return res.status(404).json({ error: 'History item not found' });
+  const { text, pinned } = req.body;
+  if (text !== undefined) {
+    if (typeof text !== 'string' || !text.trim() || text.length > HISTORY_TEXT_MAX) {
+      return res.status(400).json({ error: 'Invalid text' });
+    }
+    item.text = text;
+  }
+  if (pinned !== undefined) item.pinned = Boolean(pinned);
+  saveHistory();
+  res.json(item);
+});
+
+// API: Clear history (pinned entries are kept)
+app.delete('/api/history', (req, res) => {
+  const before = textHistory.length;
+  textHistory = textHistory.filter((h) => h.pinned);
+  saveHistory();
+  res.json({ status: 'ok', deleted: before - textHistory.length });
+});
+
+// API: Delete one history entry
+app.delete('/api/history/:id', (req, res) => {
+  const before = textHistory.length;
+  textHistory = textHistory.filter((h) => h.id !== req.params.id);
+  if (textHistory.length === before) return res.status(404).json({ error: 'History item not found' });
+  saveHistory();
+  res.json({ status: 'ok', deleted: req.params.id });
 });
 
 // API: Upload Files / Images
