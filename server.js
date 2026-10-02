@@ -12,6 +12,18 @@ const app = express();
 const PORT = process.env.PORT || 5050;
 
 // Helper: Resolve cloudflared executable path across macOS and Windows
+// Mirrors getCloudflaredBin()'s path search below: this machine's Homebrew
+// prefix isn't the default one, so PATH alone can't find brew-installed bins.
+function getTerminalNotifierBin() {
+  if (process.platform !== 'darwin') return null;
+  const candidates = [
+    '/Users/admin/homebrew/bin/terminal-notifier',
+    '/opt/homebrew/bin/terminal-notifier',
+    '/usr/local/bin/terminal-notifier',
+  ];
+  return candidates.find((p) => fs.existsSync(p)) || null;
+}
+
 function getCloudflaredBin() {
   if (process.platform === 'win32') {
     return 'cloudflared.exe';
@@ -234,12 +246,23 @@ function setSystemClipboard(text) {
 }
 
 // Helper: OS system notification (macOS & Windows)
-function notifyOS(title, message) {
+// `openUrl`, when given, is opened when the user clicks the notification.
+// osascript's "display notification" has no click action at all (and macOS
+// often attributes the click to Script Editor/Finder instead of this app),
+// so when terminal-notifier is installed we use that instead; otherwise we
+// fall back to the plain osascript notification like before.
+function notifyOS(title, message, openUrl) {
   try {
     const safeTitle = (title || 'Quick Share').replace(/"/g, '\\"');
     const safeMsg = (message || '').replace(/"/g, '\\"');
     if (process.platform === 'darwin') {
-      spawn('osascript', ['-e', `display notification "${safeMsg}" with title "${safeTitle}" sound name "Glass"`]);
+      const notifierBin = getTerminalNotifierBin();
+      if (notifierBin && openUrl) {
+        // Args go through spawn's argv array, not a shell, so no manual escaping needed here.
+        spawn(notifierBin, ['-title', title || 'Quick Share', '-message', message || '', '-open', openUrl, '-sound', 'Glass']);
+      } else {
+        spawn('osascript', ['-e', `display notification "${safeMsg}" with title "${safeTitle}" sound name "Glass"`]);
+      }
     } else if (process.platform === 'win32') {
       const psScript = `
         [reflection.assembly]::loadwithpartialname('System.Windows.Forms') | Out-Null;
@@ -468,7 +491,7 @@ app.post('/api/clipboard', (req, res) => {
 
   const preview = text.length > 40 ? text.slice(0, 40) + '...' : text;
   const source = isPublicRequest(req) ? 'Internet' : 'Local Wi-Fi';
-  notifyOS('Quick Share', `[${source}] Received text: "${preview}"`);
+  notifyOS('Quick Share', `[${source}] Received text: "${preview}"`, `http://localhost:${PORT}/?tab=text`);
   res.json({ status: 'ok', length: text.length });
 });
 
@@ -529,7 +552,7 @@ app.post('/api/upload', upload.array('files'), (req, res) => {
   const fileNames = req.files.map((f) => f.filename);
   const source = isPublicRequest(req) ? 'Internet' : 'Local Wi-Fi';
   const msg = req.files.length === 1 ? `[${source}] Received: ${fileNames[0]}` : `[${source}] Received ${req.files.length} files`;
-  notifyOS('Quick Share', msg);
+  notifyOS('Quick Share', msg, `http://localhost:${PORT}/?tab=files`);
   res.json({ status: 'ok', files: fileNames });
 });
 
